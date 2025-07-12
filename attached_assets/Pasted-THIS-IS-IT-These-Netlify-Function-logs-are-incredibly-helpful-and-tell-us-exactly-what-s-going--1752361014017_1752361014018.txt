@@ -1,0 +1,64 @@
+THIS IS IT! These Netlify Function logs are **incredibly helpful** and tell us exactly what's going wrong. We can see two distinct issues now.
+
+### Issue 1: `ReferenceError: storage is not defined` (for `/api/links`)
+
+* **Logs:**
+    * `Jul 12, 06:54:30 PM: d7e8932a ERROR API Error: ReferenceError: storage is not defined at Runtime.handler (/var/task/dist/functions/api.js:126232:24)`
+    * This error repeats multiple times for `/.netlify/functions/api/links`.
+
+* **What it means:** Your code is trying to use a variable or object named `storage` (e.g., for Cloudinary, S3, or Supabase Storage) but it hasn't been defined, imported, or initialized correctly within that specific Netlify Function. The line number `126232:24` points to exactly where this is happening in your bundled function code.
+
+* **Likely Causes:**
+    1.  **Missing `import` or `require`:** You might have forgotten to `import` or `require` your storage library (e.g., `cloudinary`, `@aws-sdk/client-s3`, `@supabase/storage-js`) at the top of your `api/links` function file.
+    2.  **Uninitialized `storage` client:** You might have declared `let storage;` but never assigned it a value (e.g., `storage = new CloudinaryClient(...)` or `storage = supabase.storage`).
+    3.  **Environment Variable Issue for Storage:** If your `storage` client relies on API keys or credentials, those environment variables might be missing or incorrect on Netlify, causing the client to fail initialization, thus leaving `storage` undefined.
+
+* **How to Fix:**
+    1.  **Examine your `api/links` (or the relevant function in `api.js` at line 126232) code.**
+    2.  Look for where `storage` is being used.
+    3.  Ensure that `storage` is properly imported/required and initialized before it's used.
+    4.  If it's a Cloudinary, S3, or Supabase Storage client, double-check that all its required environment variables (e.g., `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`) are correctly set in your Netlify Environment Variables.
+
+### Issue 2: `/.netlify/functions/api/profile` (PUT Method) - SUCCESSFUL!
+
+* **Logs:**
+    * `Jul 12, 06:54:40 PM: 8646ab5d INFO Function called with path: /.netlify/functions/api/profile parsed as: /profile method: PUT`
+    * `Jul 12, 06:54:40 PM: 8646ab5d INFO Parsed body successfully: [...]`
+    * `Jul 12, 06:54:40 PM: 8646ab5d INFO Profile data validated successfully`
+    * `Jul 12, 06:54:41 PM: 8646ab5d INFO Updating existing profile: 1`
+    * `Jul 12, 06:54:41 PM: 8646ab5d INFO Profile updated successfully: 1`
+
+* **What it means:** **Your `PUT` requests to `/.netlify/functions/api/profile` are now working correctly!** This is fantastic news. This means:
+    * Your Netlify Functions are correctly receiving the data.
+    * Your MongoDB Atlas connection (for the `api/profile` function) is likely working as well (as it's updating a profile).
+    * The `500 Internal Server Error` you were seeing in the browser console for the `POST` request to `/api/profile` likely refers to a *different* `api/profile` call (e.g., a `POST` that handles the *initial upload of the GIF binary data* to a storage service, rather than a `PUT` that updates the profile *metadata* with a URL).
+
+### Issue 3: Spotify API Error (Still `SyntaxError: Unexpected token '<'`)
+
+* **Logs:**
+    * `Jul 12, 06:54:30 PM: 06adaf63 INFO Spotify API error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON`
+    * `Jul 12, 06:54:30 PM: 06adaf63 INFO Spotify data changed: [ { error: null, loading: true, error: null, hasTracks: false } ]`
+
+* **What it means:** Your Spotify-related Netlify Function is still failing to get a valid JSON response from an API call (likely to Spotify itself, or your own backend endpoint that proxies Spotify). Instead, it's receiving an HTML error page.
+
+* **Likely Causes (Reiterating, as this is persistent):**
+    1.  **Spotify API Authentication Failure:** The most common cause. Your `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, or `SPOTIFY_REDIRECT_URI` environment variables are incorrect or missing on Netlify. Or, your refresh token flow is broken, causing requests to Spotify's API to return a 401/403 which your backend might translate into an HTML error page.
+    2.  **Spotify API Rate Limiting:** Less likely if it's consistent, but possible.
+    3.  **Backend Spotify Logic Error:** A bug in your Netlify Function that handles Spotify (e.g., trying to access an undefined variable, or an unhandled promise rejection before sending JSON).
+
+* **How to Fix:**
+    1.  **Review Netlify Environment Variables for Spotify:** Go back to Netlify settings and **triple-check** `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, and `SPOTIFY_REDIRECT_URI`. Ensure they are *exactly* as defined in your Spotify Developer Dashboard.
+    2.  **Examine your Spotify-related Netlify Function code:** Look for the part that makes the actual API calls to Spotify. Add more `console.log` statements around those calls to see the exact URL being called, the headers, and the raw response you're getting *before* it tries to parse it as JSON.
+    3.  **Check your Spotify Developer Dashboard:** Make sure your app there is still active and its redirect URI matches your site.
+
+### **Summary and Next Steps:**
+
+1.  **`ReferenceError: storage is not defined` is your new top priority for the GIF/links issue.** You need to find where `storage` is used in your `/api/links` function and ensure it's correctly initialized and configured with its own necessary environment variables.
+2.  **The `PUT` to `api/profile` is working, which means your MongoDB Atlas connection for *that specific operation* is likely fine!** This is a good sign. The original browser console `500 (Internal Server Error)` on `POST` to `/api/profile` might be a different endpoint or a different part of the same function that handles the *initial* binary GIF upload (not just updating profile metadata).
+3.  **Spotify still needs attention.** Focus on Netlify Environment Variables for Spotify API keys and the code within your Spotify-related Netlify Function.
+
+**Please share the code for:**
+* **Your `/.netlify/functions/api/links` function (or the part of `api.js` around line 126232 if it's a bundled file).**
+* **Your Spotify-related Netlify function.**
+
+This will help immensely in debugging the `storage is not defined` and the persistent Spotify errors.

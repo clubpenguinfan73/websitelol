@@ -6,6 +6,33 @@ import { getDatabase } from "./db-config";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 
+// Initialize database storage for links
+class DatabaseStorage {
+  private db = getDatabase();
+  
+  async getLinks() {
+    const result = await this.db.select().from(links).orderBy(links.order);
+    return result;
+  }
+  
+  async createLink(linkData: any) {
+    const result = await this.db.insert(links).values(linkData).returning();
+    return result[0];
+  }
+  
+  async updateLink(id: number, linkData: any) {
+    const result = await this.db.update(links).set(linkData).where(eq(links.id, id)).returning();
+    return result[0] || null;
+  }
+  
+  async deleteLink(id: number) {
+    const result = await this.db.delete(links).where(eq(links.id, id)).returning();
+    return result.length > 0;
+  }
+}
+
+const storage = new DatabaseStorage();
+
 export const handler: Handler = async (event, context) => {
   const { path, httpMethod, body } = event;
 
@@ -297,7 +324,26 @@ export const handler: Handler = async (event, context) => {
     if (apiPath === "/spotify/current") {
       if (httpMethod === "GET") {
         try {
+          console.log('Attempting to fetch Spotify current track...');
+          
+          // Check if Spotify environment variables are set
+          if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET || !process.env.SPOTIFY_REFRESH_TOKEN) {
+            console.log('Missing Spotify environment variables');
+            return {
+              statusCode: 200,
+              headers,
+              body: JSON.stringify({ 
+                is_playing: false, 
+                track: null, 
+                timestamp: Date.now(), 
+                error: "Spotify not configured" 
+              }),
+            };
+          }
+          
           const currentTrack = await spotifyAPI.getCurrentlyPlaying();
+          console.log('Successfully fetched Spotify data');
+          
           return {
             statusCode: 200,
             headers,
@@ -305,10 +351,17 @@ export const handler: Handler = async (event, context) => {
           };
         } catch (error) {
           console.error('Spotify API error:', error);
+          console.error('Error details:', error instanceof Error ? error.message : String(error));
+          
           return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({ is_playing: false, track: null, timestamp: Date.now(), error: "Spotify temporarily unavailable" }),
+            body: JSON.stringify({ 
+              is_playing: false, 
+              track: null, 
+              timestamp: Date.now(), 
+              error: "Spotify temporarily unavailable" 
+            }),
           };
         }
       }
