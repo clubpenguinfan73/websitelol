@@ -1,6 +1,6 @@
 import { MongoClient } from 'mongodb';
 
-const uri = 'mongodb+srv://renegaderaider:Cat%40Renagde.wtf73@meowing.0mzvuzl.mongodb.net/renegade_db?retryWrites=true&w=majority&appName=meowing';
+const uri = 'mongodb+srv://renegaderaider:Cat%40Renagde.wtf73@mzuvuzl.mongodb.net/renegade_db?retryWrites=true&w=majority&appName=meowing';
 
 async function testConnection() {
   console.log('Testing MongoDB Atlas connection...');
