@@ -608,10 +608,22 @@ export default function AdminPanel({
                       <input
                         type="file"
                         ref={backgroundUploadRef}
-                        accept="image/*,image/gif"
+                        accept="image/*,image/gif,image/png,image/jpeg,image/jpg,image/webp"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) handleFileUpload(file, 'background');
+                          if (file) {
+                            // Check file type explicitly
+                            const allowedTypes = ['image/gif', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+                            if (allowedTypes.includes(file.type)) {
+                              handleFileUpload(file, 'background');
+                            } else {
+                              toast({
+                                title: "Invalid file type",
+                                description: "Please upload a GIF, PNG, JPG, or WebP image.",
+                                variant: "destructive",
+                              });
+                            }
+                          }
                         }}
                         className="hidden"
                       />
