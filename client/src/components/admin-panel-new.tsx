@@ -598,28 +598,38 @@ export default function AdminPanel({
                       <input
                         type="file"
                         ref={profileUploadRef}
-                        accept="image/*,image/gif"
+                        accept="image/*"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
-                          if (file) handleFileUpload(file, 'profile');
+                          if (file) {
+                            // Check if file is image
+                            if (file.type.startsWith('image/')) {
+                              handleFileUpload(file, 'profile');
+                            } else {
+                              toast({
+                                title: "Invalid file type",
+                                description: "Please upload an image file.",
+                                variant: "destructive",
+                              });
+                            }
+                          }
                         }}
                         className="hidden"
                       />
                       <input
                         type="file"
                         ref={backgroundUploadRef}
-                        accept="image/*,image/gif,image/png,image/jpeg,image/jpg,image/webp"
+                        accept="image/*"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            // Check file type explicitly
-                            const allowedTypes = ['image/gif', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-                            if (allowedTypes.includes(file.type)) {
+                            // Check if file is image
+                            if (file.type.startsWith('image/')) {
                               handleFileUpload(file, 'background');
                             } else {
                               toast({
                                 title: "Invalid file type",
-                                description: "Please upload a GIF, PNG, JPG, or WebP image.",
+                                description: "Please upload an image file (including GIF).",
                                 variant: "destructive",
                               });
                             }
