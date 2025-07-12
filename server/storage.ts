@@ -162,8 +162,16 @@ export class DatabaseStorage implements IStorage {
     if (!process.env.DATABASE_URL) {
       throw new Error("DATABASE_URL environment variable is required");
     }
-    const sql = neon(process.env.DATABASE_URL);
-    this.db = drizzle(sql);
+    
+    try {
+      console.log('Initializing database connection...');
+      const sql = neon(process.env.DATABASE_URL);
+      this.db = drizzle(sql);
+      console.log('Database connection initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize database connection:', error);
+      throw error;
+    }
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -187,11 +195,46 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateProfile(profileData: InsertProfile): Promise<Profile> {
-    const existing = await this.getProfile();
-    if (existing) {
-      const result = await this.db
-        .update(profiles)
-        .set({
+    try {
+      console.log('Updating profile with data:', Object.keys(profileData));
+      const existing = await this.getProfile();
+      
+      if (existing) {
+        console.log('Updating existing profile:', existing.id);
+        const result = await this.db
+          .update(profiles)
+          .set({
+            username: profileData.username,
+            bio: profileData.bio,
+            profilePicture: profileData.profilePicture || null,
+            backgroundImage: profileData.backgroundImage || null,
+            backgroundMusic: profileData.backgroundMusic || null,
+            musicEnabled: profileData.musicEnabled ?? true,
+            entranceText: profileData.entranceText || 'click to enter...',
+            entranceFontSize: profileData.entranceFontSize || '4xl',
+            entranceFontFamily: profileData.entranceFontFamily || 'Inter',
+            entranceFontColor: profileData.entranceFontColor || '#ffffff',
+            usernameEffect: profileData.usernameEffect || 'none',
+            animatedTitleEnabled: profileData.animatedTitleEnabled ?? false,
+            animatedTitleTexts: profileData.animatedTitleTexts || '',
+            animatedTitleSpeed: profileData.animatedTitleSpeed || 1000,
+            discordEnabled: profileData.discordEnabled ?? false,
+            discordUserId: profileData.discordUserId || null,
+            discordApplicationId: profileData.discordApplicationId || null,
+            spotifyEnabled: profileData.spotifyEnabled ?? false,
+            spotifyTrackName: profileData.spotifyTrackName || null,
+            spotifyArtistName: profileData.spotifyArtistName || null,
+            spotifyAlbumArt: profileData.spotifyAlbumArt || null,
+            spotifyTrackUrl: profileData.spotifyTrackUrl || null,
+            profileEffect: profileData.profileEffect || 'none',
+          })
+          .where(eq(profiles.id, existing.id))
+          .returning();
+        console.log('Profile updated successfully');
+        return result[0];
+      } else {
+        console.log('Creating new profile');
+        const result = await this.db.insert(profiles).values({
           username: profileData.username,
           bio: profileData.bio,
           profilePicture: profileData.profilePicture || null,
@@ -215,37 +258,13 @@ export class DatabaseStorage implements IStorage {
           spotifyAlbumArt: profileData.spotifyAlbumArt || null,
           spotifyTrackUrl: profileData.spotifyTrackUrl || null,
           profileEffect: profileData.profileEffect || 'none',
-        })
-        .where(eq(profiles.id, existing.id))
-        .returning();
-      return result[0];
-    } else {
-      const result = await this.db.insert(profiles).values({
-        username: profileData.username,
-        bio: profileData.bio,
-        profilePicture: profileData.profilePicture || null,
-        backgroundImage: profileData.backgroundImage || null,
-        backgroundMusic: profileData.backgroundMusic || null,
-        musicEnabled: profileData.musicEnabled ?? true,
-        entranceText: profileData.entranceText || 'click to enter...',
-        entranceFontSize: profileData.entranceFontSize || '4xl',
-        entranceFontFamily: profileData.entranceFontFamily || 'Inter',
-        entranceFontColor: profileData.entranceFontColor || '#ffffff',
-        usernameEffect: profileData.usernameEffect || 'none',
-        animatedTitleEnabled: profileData.animatedTitleEnabled ?? false,
-        animatedTitleTexts: profileData.animatedTitleTexts || '',
-        animatedTitleSpeed: profileData.animatedTitleSpeed || 1000,
-        discordEnabled: profileData.discordEnabled ?? false,
-        discordUserId: profileData.discordUserId || null,
-        discordApplicationId: profileData.discordApplicationId || null,
-        spotifyEnabled: profileData.spotifyEnabled ?? false,
-        spotifyTrackName: profileData.spotifyTrackName || null,
-        spotifyArtistName: profileData.spotifyArtistName || null,
-        spotifyAlbumArt: profileData.spotifyAlbumArt || null,
-        spotifyTrackUrl: profileData.spotifyTrackUrl || null,
-        profileEffect: profileData.profileEffect || 'none',
-      }).returning();
-      return result[0];
+        }).returning();
+        console.log('New profile created successfully');
+        return result[0];
+      }
+    } catch (error) {
+      console.error('Error updating profile in database:', error);
+      throw error;
     }
   }
 

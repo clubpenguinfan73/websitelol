@@ -1,8 +1,9 @@
 import { Handler } from "@netlify/functions";
-import { storage } from "../../server/storage";
-import { insertProfileSchema, insertLinkSchema } from "../../shared/schema";
+import { insertProfileSchema, insertLinkSchema, profiles, links } from "../../shared/schema";
 import { discordAPI } from "../../server/discord";
 import { spotifyAPI } from "../../server/spotify";
+import { getDatabase } from "./db-config";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 
 export const handler: Handler = async (event, context) => {
@@ -54,12 +55,26 @@ export const handler: Handler = async (event, context) => {
     // Profile endpoints
     if (apiPath === "/profile") {
       if (httpMethod === "GET") {
-        const profile = await storage.getProfile();
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify(profile || null),
-        };
+        try {
+          const db = getDatabase();
+          const result = await db.select().from(profiles).limit(1);
+          const profile = result[0] || null;
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(profile),
+          };
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+          return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ 
+              error: 'Failed to fetch profile', 
+              details: error instanceof Error ? error.message : String(error) 
+            }),
+          };
+        }
       }
       
       if (httpMethod === "PUT") {
@@ -67,7 +82,76 @@ export const handler: Handler = async (event, context) => {
           console.log('Attempting to update profile with data:', Object.keys(parsedBody));
           const profileData = insertProfileSchema.parse(parsedBody);
           console.log('Profile data validated successfully');
-          const profile = await storage.updateProfile(profileData);
+          
+          const db = getDatabase();
+          
+          // Check if profile exists
+          const existingResult = await db.select().from(profiles).limit(1);
+          const existing = existingResult[0];
+          
+          let profile;
+          if (existing) {
+            console.log('Updating existing profile:', existing.id);
+            const result = await db
+              .update(profiles)
+              .set({
+                username: profileData.username,
+                bio: profileData.bio,
+                profilePicture: profileData.profilePicture || null,
+                backgroundImage: profileData.backgroundImage || null,
+                backgroundMusic: profileData.backgroundMusic || null,
+                musicEnabled: profileData.musicEnabled ?? true,
+                entranceText: profileData.entranceText || 'click to enter...',
+                entranceFontSize: profileData.entranceFontSize || '4xl',
+                entranceFontFamily: profileData.entranceFontFamily || 'Inter',
+                entranceFontColor: profileData.entranceFontColor || '#ffffff',
+                usernameEffect: profileData.usernameEffect || 'none',
+                animatedTitleEnabled: profileData.animatedTitleEnabled ?? false,
+                animatedTitleTexts: profileData.animatedTitleTexts || '',
+                animatedTitleSpeed: profileData.animatedTitleSpeed || 1000,
+                discordEnabled: profileData.discordEnabled ?? false,
+                discordUserId: profileData.discordUserId || null,
+                discordApplicationId: profileData.discordApplicationId || null,
+                spotifyEnabled: profileData.spotifyEnabled ?? false,
+                spotifyTrackName: profileData.spotifyTrackName || null,
+                spotifyArtistName: profileData.spotifyArtistName || null,
+                spotifyAlbumArt: profileData.spotifyAlbumArt || null,
+                spotifyTrackUrl: profileData.spotifyTrackUrl || null,
+                profileEffect: profileData.profileEffect || 'none',
+              })
+              .where(eq(profiles.id, existing.id))
+              .returning();
+            profile = result[0];
+          } else {
+            console.log('Creating new profile');
+            const result = await db.insert(profiles).values({
+              username: profileData.username,
+              bio: profileData.bio,
+              profilePicture: profileData.profilePicture || null,
+              backgroundImage: profileData.backgroundImage || null,
+              backgroundMusic: profileData.backgroundMusic || null,
+              musicEnabled: profileData.musicEnabled ?? true,
+              entranceText: profileData.entranceText || 'click to enter...',
+              entranceFontSize: profileData.entranceFontSize || '4xl',
+              entranceFontFamily: profileData.entranceFontFamily || 'Inter',
+              entranceFontColor: profileData.entranceFontColor || '#ffffff',
+              usernameEffect: profileData.usernameEffect || 'none',
+              animatedTitleEnabled: profileData.animatedTitleEnabled ?? false,
+              animatedTitleTexts: profileData.animatedTitleTexts || '',
+              animatedTitleSpeed: profileData.animatedTitleSpeed || 1000,
+              discordEnabled: profileData.discordEnabled ?? false,
+              discordUserId: profileData.discordUserId || null,
+              discordApplicationId: profileData.discordApplicationId || null,
+              spotifyEnabled: profileData.spotifyEnabled ?? false,
+              spotifyTrackName: profileData.spotifyTrackName || null,
+              spotifyArtistName: profileData.spotifyArtistName || null,
+              spotifyAlbumArt: profileData.spotifyAlbumArt || null,
+              spotifyTrackUrl: profileData.spotifyTrackUrl || null,
+              profileEffect: profileData.profileEffect || 'none',
+            }).returning();
+            profile = result[0];
+          }
+          
           console.log('Profile updated successfully:', profile.id);
           return {
             statusCode: 200,
