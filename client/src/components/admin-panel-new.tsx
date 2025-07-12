@@ -113,9 +113,12 @@ export default function AdminPanel({
   });
 
   const handleFileUpload = (file: File, type: 'background' | 'profile' | 'music' | 'spotify-album') => {
+    console.log(`Uploading ${type} file:`, file.name, file.type, file.size);
+    
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
+      console.log(`File loaded successfully for ${type}:`, result.substring(0, 100) + '...');
       
       const updateData: any = {
         username: username || profile?.username || "",
@@ -145,8 +148,10 @@ export default function AdminPanel({
 
       if (type === 'background') {
         updateData.backgroundImage = result;
+        console.log('Setting background image:', result.substring(0, 100) + '...');
       } else if (type === 'profile') {
         updateData.profilePicture = result;
+        console.log('Setting profile picture:', result.substring(0, 100) + '...');
       } else if (type === 'music') {
         updateData.backgroundMusic = result;
         updateData.musicEnabled = true;
@@ -156,8 +161,24 @@ export default function AdminPanel({
         setSpotifyAlbumArt(result);
       }
 
+      // Show success toast
+      toast({
+        title: `${type === 'background' ? 'Background' : type === 'profile' ? 'Profile picture' : 'File'} uploaded`,
+        description: `${file.name} has been uploaded successfully.`,
+      });
+
       updateProfileMutation.mutate(updateData);
     };
+    
+    reader.onerror = (error) => {
+      console.error(`Error reading ${type} file:`, error);
+      toast({
+        title: "Upload failed",
+        description: `Failed to read ${file.name}. Please try again.`,
+        variant: "destructive",
+      });
+    };
+    
     reader.readAsDataURL(file);
   };
 
@@ -602,10 +623,21 @@ export default function AdminPanel({
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
+                            const fileType = file.type.toLowerCase();
+                            const fileName = file.name.toLowerCase();
+                            
                             // Accept all image types including GIF
-                            if (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.gif')) {
+                            if (fileType.startsWith('image/') || 
+                                fileName.endsWith('.gif') || 
+                                fileName.endsWith('.jpg') || 
+                                fileName.endsWith('.jpeg') || 
+                                fileName.endsWith('.png') || 
+                                fileName.endsWith('.webp')) {
+                              
+                              console.log('Profile file accepted:', file.name, file.type);
                               handleFileUpload(file, 'profile');
                             } else {
+                              console.log('Profile file rejected:', file.name, file.type);
                               toast({
                                 title: "Invalid file type",
                                 description: "Please upload an image file (JPG, PNG, GIF, WEBP).",
@@ -623,10 +655,25 @@ export default function AdminPanel({
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
+                            const fileType = file.type.toLowerCase();
+                            const fileName = file.name.toLowerCase();
+                            
                             // Accept all image types including GIF, and video files
-                            if (file.type.startsWith('image/') || file.type.startsWith('video/') || file.name.toLowerCase().endsWith('.gif')) {
+                            if (fileType.startsWith('image/') || 
+                                fileType.startsWith('video/') || 
+                                fileName.endsWith('.gif') || 
+                                fileName.endsWith('.jpg') || 
+                                fileName.endsWith('.jpeg') || 
+                                fileName.endsWith('.png') || 
+                                fileName.endsWith('.webp') || 
+                                fileName.endsWith('.mp4') || 
+                                fileName.endsWith('.webm') || 
+                                fileName.endsWith('.mov')) {
+                              
+                              console.log('Background file accepted:', file.name, file.type);
                               handleFileUpload(file, 'background');
                             } else {
+                              console.log('Background file rejected:', file.name, file.type);
                               toast({
                                 title: "Invalid file type",
                                 description: "Please upload an image file (JPG, PNG, GIF, WEBP) or video file (MP4, WEBM, MOV).",

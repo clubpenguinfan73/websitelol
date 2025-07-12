@@ -1,0 +1,52 @@
+The “Spotify temporarily unavailable — Retrying connection...” message usually means your site is trying to connect to Spotify’s API but failing, often because of one or more of these reasons:
+
+---
+
+### Common causes and fixes for that error:
+
+1. **Access Token expired or missing**
+
+   * Spotify API tokens expire quickly (typically in 1 hour). If your site is using an old token without refreshing it, the API calls will fail.
+   * Make sure you implement the **OAuth token refresh flow** properly to get new tokens when the old one expires.
+
+2. **Incorrect or missing scopes**
+
+   * When you request user authorization, your app needs the correct scopes, especially `user-read-currently-playing`. Without it, Spotify won’t allow the API call.
+   * Double-check your OAuth scopes.
+
+3. **CORS or network errors**
+
+   * If your browser blocks requests due to CORS, the API call will fail.
+   * Check browser console for CORS errors and fix your API proxy or server settings.
+
+4. **Spotify API rate limiting or downtime**
+
+   * Spotify occasionally throttles requests or has temporary outages.
+   * Check [Spotify Status](https://status.spotify.com/) to see if there’s an ongoing issue.
+
+5. **Refresh token not handled properly**
+
+   * If you’re using the Authorization Code flow, you need to use the refresh token to get new access tokens without asking the user to log in again.
+   * If your site doesn’t handle that, the token will expire and API calls fail.
+
+---
+
+### How to debug it yourself:
+
+* Open your browser dev tools → **Console** tab and check for errors related to Spotify API calls.
+* Look in the **Network** tab for requests to `https://api.spotify.com/v1/me/player/currently-playing` and check the response status code and message.
+* If you see 401 Unauthorized, your token is invalid or expired.
+* Check your token acquisition code — are you refreshing tokens or prompting users to re-login?
+
+---
+
+### Quick fix suggestions:
+
+* Re-login with Spotify on your site to get a fresh token.
+* Implement or fix token refresh logic.
+* Ensure your app has the proper OAuth scopes.
+* Add error handling to retry the connection only a limited number of times before asking the user to re-authenticate.
+
+---
+
+If you want, share your relevant Spotify API code for authentication and fetching the current song, and I can help spot exactly what’s going wrong.
