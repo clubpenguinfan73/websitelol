@@ -695,6 +695,260 @@ export const handler: Handler = async (event, context) => {
       }
     }
 
+    // Discord OAuth2 callback route
+    if (apiPath === "/discord/callback") {
+      if (httpMethod === "GET") {
+        const code = event.queryStringParameters?.code;
+        
+        if (!code) {
+          return {
+            statusCode: 400,
+            headers: corsHeaders,
+            body: JSON.stringify({ error: 'Missing authorization code' }),
+          };
+        }
+
+        try {
+          console.log('Processing Discord OAuth callback with code:', code);
+          
+          // Discord OAuth2 configuration
+          const CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1393354181536120966';
+          const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
+          const REDIRECT_URI = 'https://renegaderaider.wtf/discord/callback';
+
+          console.log('Using Discord OAuth config:', {
+            CLIENT_ID,
+            CLIENT_SECRET: CLIENT_SECRET ? 'Set' : 'Missing',
+            REDIRECT_URI
+          });
+
+          // Exchange code for access token
+          const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              client_id: CLIENT_ID,
+              client_secret: CLIENT_SECRET,
+              grant_type: 'authorization_code',
+              code: code,
+              redirect_uri: REDIRECT_URI,
+              scope: 'identify'
+            })
+          });
+
+          console.log('Discord token response status:', tokenResponse.status);
+
+          if (!tokenResponse.ok) {
+            const errorText = await tokenResponse.text();
+            console.error('Discord token exchange failed:', errorText);
+            return {
+              statusCode: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'text/html' },
+              body: `
+                <h1>Discord OAuth Error</h1>
+                <p>Token exchange failed: ${errorText}</p>
+                <a href="/">Return to Site</a>
+              `,
+            };
+          }
+
+          const tokenData = await tokenResponse.json();
+          const accessToken = tokenData.access_token;
+
+          console.log('Successfully obtained Discord access token');
+
+          // Use access token to get user info
+          const userResponse = await fetch('https://discord.com/api/users/@me', {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+
+          console.log('Discord user response status:', userResponse.status);
+
+          if (!userResponse.ok) {
+            const errorText = await userResponse.text();
+            console.error('Discord user fetch failed:', errorText);
+            return {
+              statusCode: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'text/html' },
+              body: `
+                <h1>Discord OAuth Error</h1>
+                <p>User fetch failed: ${errorText}</p>
+                <a href="/">Return to Site</a>
+              `,
+            };
+          }
+
+          const user = await userResponse.json();
+          console.log('Successfully fetched Discord user:', user.username);
+
+          // Generate avatar URL
+          const avatarUrl = user.avatar 
+            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${user.avatar.startsWith('a_') ? 'gif' : 'png'}?size=256`
+            : `https://cdn.discordapp.com/embed/avatars/${parseInt(user.discriminator) % 5}.png`;
+
+          // Create a success page with user info and redirect back to main site
+          const successPage = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <title>Discord Login Success</title>
+              <style>
+                body { 
+                  font-family: Arial, sans-serif; 
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: white;
+                  display: flex;
+                  justify-content: center;
+                  align-items: center;
+                  min-height: 100vh;
+                  margin: 0;
+                }
+                .container {
+                  background: rgba(0,0,0,0.2);
+                  padding: 30px;
+                  border-radius: 10px;
+                  text-align: center;
+                  backdrop-filter: blur(10px);
+                  max-width: 500px;
+                }
+                .avatar { 
+                  width: 80px; 
+                  height: 80px; 
+                  border-radius: 50%; 
+                  margin: 20px auto;
+                  border: 3px solid #fff;
+                  display: block;
+                }
+                .username { 
+                  font-size: 24px; 
+                  font-weight: bold; 
+                  margin: 10px 0;
+                }
+                .message { 
+                  font-size: 16px; 
+                  margin: 20px 0;
+                }
+                .button {
+                  background: #5865F2;
+                  color: white;
+                  padding: 12px 24px;
+                  border: none;
+                  border-radius: 5px;
+                  font-size: 16px;
+                  cursor: pointer;
+                  text-decoration: none;
+                  display: inline-block;
+                  margin: 10px;
+                }
+                .button:hover {
+                  background: #4752C4;
+                }
+                .user-info {
+                  background: rgba(255,255,255,0.1);
+                  padding: 20px;
+                  border-radius: 8px;
+                  margin: 20px 0;
+                  text-align: left;
+                }
+                .user-info h3 {
+                  margin-top: 0;
+                  text-align: center;
+                }
+                .user-data {
+                  font-family: monospace;
+                  font-size: 14px;
+                  background: rgba(0,0,0,0.3);
+                  padding: 10px;
+                  border-radius: 5px;
+                  margin: 10px 0;
+                }
+                .countdown {
+                  font-size: 14px;
+                  margin: 20px 0;
+                  opacity: 0.8;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <h1>🎉 Discord Login Successful!</h1>
+                <img src="${avatarUrl}" alt="Avatar" class="avatar">
+                <div class="username">${user.username}#${user.discriminator}</div>
+                <div class="message">Successfully authenticated with Discord!</div>
+                
+                <div class="user-info">
+                  <h3>User Information Retrieved:</h3>
+                  <div class="user-data">
+                    <strong>ID:</strong> ${user.id}<br>
+                    <strong>Username:</strong> ${user.username}<br>
+                    <strong>Discriminator:</strong> ${user.discriminator}<br>
+                    <strong>Avatar:</strong> ${user.avatar || 'Default'}<br>
+                    <strong>Verified:</strong> ${user.verified ? 'Yes' : 'No'}<br>
+                    <strong>Locale:</strong> ${user.locale || 'Not set'}<br>
+                    <strong>Flags:</strong> ${user.public_flags || 0}
+                  </div>
+                </div>
+                
+                <div class="countdown">Redirecting to your site in <span id="countdown">5</span> seconds...</div>
+                
+                <a href="/" class="button">Return to Site Now</a>
+                <a href="/admin" class="button">Go to Admin Panel</a>
+              </div>
+              
+              <script>
+                // Store user data in localStorage for use in the main app
+                localStorage.setItem('discordUser', JSON.stringify({
+                  id: '${user.id}',
+                  username: '${user.username}',
+                  discriminator: '${user.discriminator}',
+                  avatar: '${avatarUrl}',
+                  verified: ${user.verified || false},
+                  locale: '${user.locale || ''}',
+                  public_flags: ${user.public_flags || 0}
+                }));
+                
+                // Countdown timer
+                let count = 5;
+                const countdownEl = document.getElementById('countdown');
+                const timer = setInterval(() => {
+                  count--;
+                  countdownEl.textContent = count;
+                  if (count <= 0) {
+                    clearInterval(timer);
+                    window.location.href = '/';
+                  }
+                }, 1000);
+              </script>
+            </body>
+            </html>
+          `;
+
+          return {
+            statusCode: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'text/html' },
+            body: successPage,
+          };
+
+        } catch (error) {
+          console.error('Discord OAuth error:', error);
+          return {
+            statusCode: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'text/html' },
+            body: `
+              <h1>Discord OAuth Error</h1>
+              <p>Something went wrong during authentication.</p>
+              <p>Error: ${error instanceof Error ? error.message : 'Unknown error'}</p>
+              <a href="/">Return to Site</a>
+            `,
+          };
+        }
+      }
+    }
+
     // Not found
     console.log('Unhandled path:', apiPath, 'original path:', path);
     return {
