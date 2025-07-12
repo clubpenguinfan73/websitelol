@@ -23,6 +23,12 @@
   to = "/.netlify/functions/api/:splat"
   status = 200
 
+# MongoDB Atlas integration (ready for production)
+[[redirects]]
+  from = "/api-mongo/*"
+  to = "/.netlify/functions/mongo-api/:splat"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
