@@ -1,0 +1,65 @@
+Alright, let’s break down those two issues — your Spotify API not tracking your current song, and the GIF background not working on your site.
+
+---
+
+### 1. **Spotify API not tracking your current song**
+
+Common causes why Spotify API integration to get your currently playing song doesn’t work:
+
+* **Authentication / Token issues:**
+  Spotify API requires an access token with the right scopes (like `user-read-currently-playing`).
+  Tokens expire fast (usually in 1 hour). Are you refreshing the token properly?
+* **CORS or request errors:**
+  Check if your API requests are blocked by CORS or failing with 401/403 errors.
+* **Incorrect API endpoint or request:**
+  The endpoint to get currently playing track is:
+  `GET https://api.spotify.com/v1/me/player/currently-playing`
+  Make sure your request uses the right headers:
+
+  ```
+  Authorization: Bearer YOUR_ACCESS_TOKEN  
+  ```
+* **User not playing anything:**
+  If you’re not actively playing a song on Spotify, the API returns empty or no data.
+* **Playback not accessible:**
+  The API only tracks devices logged in with the same Spotify account and with active playback.
+
+**How to debug:**
+
+* Open browser dev tools → Network tab → look at Spotify API requests → check response and status codes.
+* Check if the token is valid and has the right scopes.
+* See if your code handles token refresh properly.
+
+---
+
+### 2. **GIF background not working**
+
+If your GIF isn’t showing as the background, common causes:
+
+* **CSS syntax or path issue:**
+  Make sure your CSS has correct URL path to the GIF and the syntax is right:
+
+  ```css
+  background-image: url('path/to/your.gif');
+  background-repeat: no-repeat;
+  background-size: cover;
+  ```
+* **GIF too large or blocked:**
+  Large GIFs may load slowly or not at all, or your hosting might block GIFs.
+* **Overlay or other CSS interfering:**
+  Sometimes other elements or CSS properties (like `background-color`, z-index, opacity) hide or block the GIF.
+* **Wrong file type or extension:**
+  Double-check the GIF file is valid and accessible.
+
+---
+
+### How I can help next
+
+* If you want, share your Spotify integration code or error messages.
+* Share your CSS snippet where you set the GIF background.
+* I can check your site live and inspect how those features are implemented.
+* I can help you test API calls directly.
+
+---
+
+Want me to look at your Spotify API usage code and your CSS for the background? Just share snippets or explain how you implemented it!

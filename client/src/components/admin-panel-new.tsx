@@ -598,17 +598,17 @@ export default function AdminPanel({
                       <input
                         type="file"
                         ref={profileUploadRef}
-                        accept="image/*"
+                        accept="image/*,image/gif,image/webp,.gif,.jpg,.jpeg,.png,.webp"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            // Check if file is image
-                            if (file.type.startsWith('image/')) {
+                            // Accept all image types including GIF
+                            if (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.gif')) {
                               handleFileUpload(file, 'profile');
                             } else {
                               toast({
                                 title: "Invalid file type",
-                                description: "Please upload an image file.",
+                                description: "Please upload an image file (JPG, PNG, GIF, WEBP).",
                                 variant: "destructive",
                               });
                             }
@@ -619,17 +619,17 @@ export default function AdminPanel({
                       <input
                         type="file"
                         ref={backgroundUploadRef}
-                        accept="image/*"
+                        accept="image/*,image/gif,image/webp,.gif,.jpg,.jpeg,.png,.webp,.mp4,.webm,.mov"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {
-                            // Check if file is image
-                            if (file.type.startsWith('image/')) {
+                            // Accept all image types including GIF, and video files
+                            if (file.type.startsWith('image/') || file.type.startsWith('video/') || file.name.toLowerCase().endsWith('.gif')) {
                               handleFileUpload(file, 'background');
                             } else {
                               toast({
                                 title: "Invalid file type",
-                                description: "Please upload an image file (including GIF).",
+                                description: "Please upload an image file (JPG, PNG, GIF, WEBP) or video file (MP4, WEBM, MOV).",
                                 variant: "destructive",
                               });
                             }

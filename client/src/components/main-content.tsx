@@ -247,7 +247,7 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
         {/* Social Links - iOS Control Center Style - Only show if there are links */}
         {links.length > 0 && (
           <div className="bg-medium-gray/80 backdrop-blur-sm border border-light-gray/30 rounded-2xl p-4 mb-8 shadow-2xl">
-            <div className="grid grid-cols-5 gap-3 w-full max-w-sm mx-auto">
+            <div className="flex flex-wrap justify-center gap-3 w-full max-w-sm mx-auto">
               {links.map((link) => (
                 <motion.a
                   key={link.id}
