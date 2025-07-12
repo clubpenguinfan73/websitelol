@@ -280,4 +280,4 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Use environment variable to determine storage type
-export const storage = process.env.DATABASE_URL ? new DatabaseStorage() : new MemStorage();
+export const storage = new DatabaseStorage();
