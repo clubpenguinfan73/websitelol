@@ -1,0 +1,58 @@
+Given that the issues are still persisting after your database solution and attempts to fix lock files, it's clear we need to dive directly into your code. Yes, absolutely, **please provide the relevant files\!**
+
+The more context and code you can share, the better I can understand the exact implementation and pinpoint the problems.
+
+Based on our previous conversation, the most crucial files would be:
+
+**1. For the Spotify Issue:**
+
+  * `client/src/hooks/use-spotify.ts` (or the file containing your Spotify fetching logic)
+  * `client/src/utils/cache-buster.ts` (to confirm cache invalidation logic)
+  * `client/src/components/main-content.tsx` (where Spotify data is consumed and displayed)
+  * **Crucially, your Netlify Function code (or backend code) that handles Spotify API calls and token refreshing.** This is likely where the `SyntaxError: Unexpected token '<'` is originating if the server is returning HTML instead of JSON. Look for files like:
+      * `netlify/functions/spotify-auth.js` (or similar)
+      * `netlify/functions/spotify-token-refresh.js` (or similar)
+      * Any other server-side code related to Spotify integration.
+
+**2. For the GIF (PFP/Background) Display/Upload Issues:**
+
+  * `client/src/components/admin-panel-new.tsx` (the file handling the upload form and client-side logic)
+  * **Your Netlify Function code (or backend code) that handles the actual file upload and storage.** This is where the `500 Internal Server Error` is coming from. Look for files like:
+      * `netlify/functions/api/profile.js` (or similar, as indicated by the `POST` error)
+      * Any other server-side code that deals with image processing or file storage.
+  * **The HTML/CSS where you're *trying* to display the GIFs.** Even if the upload works, display might fail.
+      * The `<img>` tag for your PFP.
+      * The CSS where you're using `background-image` for your background.
+
+**How to share the files:**
+
+  * **Copy and Paste:** For smaller files, you can simply copy the code and paste it directly into our chat.
+
+  * **Code Blocks:** When pasting code, please use Markdown code blocks for readability:
+
+    ```javascript
+    // Your JavaScript/TypeScript code here
+    ```
+
+    ```html
+    ```
+
+    ```css
+    /* Your CSS code here */
+    ```
+
+  * **Mention file paths:** Always tell me the file name and its path within your project (e.g., `client/src/hooks/use-spotify.ts`).
+
+**Before you share, please double-check for any sensitive information (API keys, client secrets, database credentials) and replace them with placeholders like `YOUR_SPOTIFY_CLIENT_ID` or `YOUR_DB_CONNECTION_STRING`.**
+
+Once I have these files, I can examine the logic directly and look for common pitfalls like:
+
+  * Incorrect async/await usage
+  * Unhandled promises
+  * Incorrect data parsing (JSON vs. form data)
+  * Misconfigurations in API calls
+  * Missing or incorrect dependencies in your serverless functions
+  * Logic errors in file processing or storage
+  * CSS overrides preventing display
+
+Looking forward to reviewing your code\!

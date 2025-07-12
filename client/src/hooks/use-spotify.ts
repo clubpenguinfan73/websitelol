@@ -38,14 +38,21 @@ export function useSpotifyCurrentTrack() {
         const response = await fetch('/api/spotify/current');
         if (!response.ok) {
           console.log('Spotify API response not ok:', response.status);
-          return null;
+          return { is_playing: false, track: null, timestamp: Date.now() };
         }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.log('Spotify API returned non-JSON response');
+          return { is_playing: false, track: null, timestamp: Date.now() };
+        }
+        
         const data = await response.json();
         console.log('Spotify API success:', data?.track?.name || 'No track');
         return data;
       } catch (error) {
         console.log('Spotify API error:', error);
-        return null;
+        return { is_playing: false, track: null, timestamp: Date.now() };
       }
     },
     refetchInterval: 10000, // Refetch every 10 seconds (less aggressive)

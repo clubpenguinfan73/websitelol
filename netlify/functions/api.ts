@@ -301,14 +301,14 @@ export const handler: Handler = async (event, context) => {
           return {
             statusCode: 200,
             headers,
-            body: JSON.stringify(currentTrack),
+            body: JSON.stringify(currentTrack || { is_playing: false, track: null, timestamp: Date.now() }),
           };
         } catch (error) {
           console.error('Spotify API error:', error);
           return {
-            statusCode: 500,
+            statusCode: 200,
             headers,
-            body: JSON.stringify({ message: "Failed to fetch current track" }),
+            body: JSON.stringify({ is_playing: false, track: null, timestamp: Date.now(), error: "Spotify temporarily unavailable" }),
           };
         }
       }
@@ -321,7 +321,7 @@ export const handler: Handler = async (event, context) => {
           return {
             statusCode: 200,
             headers,
-            body: JSON.stringify(recentTracks),
+            body: JSON.stringify(recentTracks || []),
           };
         } catch (error) {
           console.error('Spotify API error:', error);

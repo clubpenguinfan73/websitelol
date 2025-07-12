@@ -63,8 +63,8 @@ class SpotifyAPI {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Spotify token refresh failed:', errorData);
+        const errorText = await response.text();
+        console.error('Spotify token refresh failed:', response.status, errorText);
         throw new Error(`Failed to get Spotify access token: ${response.status} ${response.statusText}`);
       }
 

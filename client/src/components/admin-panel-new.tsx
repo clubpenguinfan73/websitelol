@@ -91,12 +91,19 @@ export default function AdminPanel({
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) => apiRequest("/api/profile", "PUT", data),
     onSuccess: () => {
-      // Clear all cache and force fresh fetch
-      queryClient.clear();
-      queryClient.refetchQueries({ queryKey: ["/api/profile"] });
+      // Only invalidate profile cache, don't clear everything
+      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
       toast({
         title: "Profile updated successfully",
         description: "Your changes have been saved.",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Profile update error:', error);
+      toast({
+        title: "Update failed",
+        description: error.message || "Failed to update profile. Please try again.",
+        variant: "destructive",
       });
     },
   });
@@ -114,6 +121,33 @@ export default function AdminPanel({
 
   const handleFileUpload = (file: File, type: 'background' | 'profile' | 'music' | 'spotify-album') => {
     console.log(`Uploading ${type} file:`, file.name, file.type, file.size);
+    
+    // Check file size - limit to 10MB for better compatibility
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: `${file.name} is too large. Please choose a file smaller than 10MB.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate file type
+    const validTypes = {
+      background: ['image/gif', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'video/mp4', 'video/webm', 'video/mov'],
+      profile: ['image/gif', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+      music: ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp3'],
+      'spotify-album': ['image/gif', 'image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+    };
+    
+    if (!validTypes[type].includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: `Please choose a valid ${type} file. Supported: ${validTypes[type].join(', ')}`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -160,12 +194,6 @@ export default function AdminPanel({
         updateData.spotifyAlbumArt = result;
         setSpotifyAlbumArt(result);
       }
-
-      // Show success toast
-      toast({
-        title: `${type === 'background' ? 'Background' : type === 'profile' ? 'Profile picture' : 'File'} uploaded`,
-        description: `${file.name} has been uploaded successfully.`,
-      });
 
       updateProfileMutation.mutate(updateData);
     };
