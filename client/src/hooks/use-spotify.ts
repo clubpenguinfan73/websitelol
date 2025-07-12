@@ -42,8 +42,10 @@ export function useSpotifyCurrentTrack() {
     },
     refetchInterval: 5000, // Refetch every 5 seconds
     refetchOnWindowFocus: true,
-    retry: 1,
+    retry: 3, // Retry more times
+    retryDelay: 1000, // Wait 1 second between retries
     staleTime: 3000, // Consider data stale after 3 seconds
+    gcTime: 30000, // Keep cached data for 30 seconds
   });
 
   // Smooth progress interpolation

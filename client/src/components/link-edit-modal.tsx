@@ -23,6 +23,7 @@ const iconOptions = [
   { value: "fab fa-twitter", label: "Twitter", color: "bg-gaming-cyan" },
   { value: "fab fa-discord", label: "Discord", color: "bg-indigo-600" },
   { value: "fab fa-spotify", label: "Spotify", color: "bg-green-600" },
+  { value: "fab fa-lastfm", label: "Last.fm", color: "bg-red-600" },
   { value: "fab fa-instagram", label: "Instagram", color: "bg-pink-600" },
   { value: "fab fa-tiktok", label: "TikTok", color: "bg-black" },
 ];
