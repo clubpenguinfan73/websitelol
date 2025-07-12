@@ -34,22 +34,26 @@ export function useSpotifyCurrentTrack() {
   const query = useQuery({
     queryKey: ['/api/spotify/current'],
     queryFn: async (): Promise<SpotifyCurrentlyPlaying | null> => {
-      const response = await fetch('/api/spotify/current');
-      if (!response.ok) {
-        // Don't throw error, return null to show "nothing playing" state
-        console.log('Spotify API response not ok:', response.status);
+      try {
+        const response = await fetch('/api/spotify/current');
+        if (!response.ok) {
+          console.log('Spotify API response not ok:', response.status);
+          return null;
+        }
+        const data = await response.json();
+        console.log('Spotify API success:', data?.track?.name || 'No track');
+        return data;
+      } catch (error) {
+        console.log('Spotify API error:', error);
         return null;
       }
-      const data = await response.json();
-      console.log('Spotify API response:', data);
-      return data;
     },
-    refetchInterval: 5000, // Refetch every 5 seconds
-    refetchOnWindowFocus: true,
-    retry: 2, // Retry twice
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
-    staleTime: 1000, // Consider data stale after 1 second
-    gcTime: 10000, // Keep cached data for 10 seconds
+    refetchInterval: 10000, // Refetch every 10 seconds (less aggressive)
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    retry: 1, // Only retry once
+    retryDelay: 2000, // Wait 2 seconds before retry
+    staleTime: 5000, // Consider data fresh for 5 seconds
+    gcTime: 30000, // Keep cached data for 30 seconds
   });
 
   // Smooth progress interpolation

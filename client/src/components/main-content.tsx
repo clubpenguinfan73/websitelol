@@ -9,7 +9,6 @@ import AnimatedTitle from "./animated-title";
 import ProfileEffects from "./profile-effects";
 import { useDiscordProfile } from "@/hooks/use-discord-profile";
 import { useSpotifyCurrentTrack, formatDuration, getAlbumArt } from "@/hooks/use-spotify";
-import { invalidateSpotifyCache } from "@/utils/cache-buster";
 
 interface MainContentProps {
   profile?: Profile;
@@ -27,14 +26,15 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
   const { profile: discordProfile, activity: discordActivity, isLoading: discordLoading, error: discordError, getBadgeIcon } = useDiscordProfile();
   const { data: spotifyData, isLoading: spotifyLoading, error: spotifyError } = useSpotifyCurrentTrack();
   
-  // Force cache refresh on mount
+  // Debug Spotify data
   useEffect(() => {
-    const timer = setTimeout(() => {
-      invalidateSpotifyCache();
-    }, 2000);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    console.log('Spotify data changed:', { 
+      data: spotifyData, 
+      loading: spotifyLoading, 
+      error: spotifyError,
+      hasTrack: !!spotifyData?.track 
+    });
+  }, [spotifyData, spotifyLoading, spotifyError]);
 
   // Check if background is a video
   const isVideoBackground = backgroundImage && (
@@ -387,14 +387,16 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
                     <div className="h-3 bg-gray-600 rounded w-1/2"></div>
                   </div>
                 </div>
-              ) : spotifyError || !spotifyData ? (
+              ) : !spotifyData || !spotifyData.track ? (
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center">
                     <i className="fab fa-spotify text-gray-500 text-xl"></i>
                   </div>
                   <div className="flex-1">
                     <h4 className="font-semibold text-white">Spotify</h4>
-                    <p className="text-sm text-gray-400">Nothing playing</p>
+                    <p className="text-sm text-gray-400">
+                      {spotifyError ? 'Connection error' : 'Nothing playing'}
+                    </p>
                   </div>
                 </div>
               ) : spotifyData && spotifyData.track ? (
