@@ -1,0 +1,86 @@
+Perfect — that means the **Discord login is now working**, and it's redirecting you to:
+
+```
+https://renegaderaider.wtf/discord/callback?code=...
+```
+
+But now your site is showing a **404** — which means your server **isn't handling that `/discord/callback` route yet**.
+
+---
+
+## ✅ Here's how to fix the 404
+
+Since you're using **Replit with Node.js**, you need to add this route to your Express server:
+
+---
+
+### 🔧 In your `index.js` or `server.js` file:
+
+```js
+const express = require('express');
+const axios = require('axios');
+const app = express();
+
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const REDIRECT_URI = 'https://renegaderaider.wtf/discord/callback';
+
+app.get('/discord/callback', async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).send('Missing authorization code.');
+
+  try {
+    // Exchange code for access token
+    const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: REDIRECT_URI,
+      scope: 'identify'
+    }), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      }
+    });
+
+    const accessToken = tokenResponse.data.access_token;
+
+    // Get user profile
+    const userResponse = await axios.get('https://discord.com/api/users/@me', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    const user = userResponse.data;
+
+    res.send(`
+      <h1>Welcome, ${user.username}#${user.discriminator}!</h1>
+      <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="Avatar" />
+      <p>ID: ${user.id}</p>
+    `);
+  } catch (error) {
+    console.error(error?.response?.data || error);
+    res.status(500).send('OAuth callback failed.');
+  }
+});
+```
+
+---
+
+### ✅ Then restart your Replit app
+
+1. Save the file
+2. Click the **"Run"** button on Replit
+3. Visit the OAuth link again:
+
+   ```
+   https://discord.com/oauth2/authorize?client_id=1393354181536120966&response_type=code&redirect_uri=https%3A%2F%2Frenegaderaider.wtf%2Fdiscord%2Fcallback&scope=identify
+   ```
+4. Authorize the app
+5. You’ll be redirected back to your site, and you should now see your Discord profile data instead of a 404! ✅
+
+---
+
+Would you like me to help style that callback response into your actual site layout (instead of raw HTML)?

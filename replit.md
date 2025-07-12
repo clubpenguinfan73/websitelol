@@ -213,5 +213,11 @@ To set up Netlify DB for your deployment:
   - Created discord-login-helper.html for testing and setup guidance
   - Integrated OAuth callback into both Express server and Netlify Functions
   - Ready for production use with proper redirect URI configuration
+- **July 12, 2025**: DISCORD OAUTH2 PRODUCTION DEPLOYMENT FIX:
+  - Fixed 404 error on Discord OAuth callback in production
+  - Updated Netlify function to handle both /discord/callback and /api/discord/callback paths
+  - Added fallback environment variables for Discord credentials
+  - Verified OAuth flow works: Discord → authorization → callback → success page → redirect
+  - Complete Discord integration ready for deployment with all credentials configured
 
 The application is designed to be easily deployable to Netlify with automatic database provisioning and serverless architecture.

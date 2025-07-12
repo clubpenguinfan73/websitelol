@@ -695,8 +695,8 @@ export const handler: Handler = async (event, context) => {
       }
     }
 
-    // Discord OAuth2 callback route
-    if (apiPath === "/discord/callback") {
+    // Discord OAuth2 callback route (handle both /discord/callback and /api/discord/callback)
+    if (apiPath === "/discord/callback" || path === "/discord/callback") {
       if (httpMethod === "GET") {
         const code = event.queryStringParameters?.code;
         
@@ -713,7 +713,7 @@ export const handler: Handler = async (event, context) => {
           
           // Discord OAuth2 configuration
           const CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1393354181536120966';
-          const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
+          const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || 'DVCv0_dyChk8XGjfVKHTxMy5rOgi4EG2';
           const REDIRECT_URI = 'https://renegaderaider.wtf/discord/callback';
 
           console.log('Using Discord OAuth config:', {

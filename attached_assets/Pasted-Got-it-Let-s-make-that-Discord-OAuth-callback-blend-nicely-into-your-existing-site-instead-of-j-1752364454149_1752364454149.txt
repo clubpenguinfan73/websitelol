@@ -1,0 +1,131 @@
+Got it! Let’s make that Discord OAuth callback **blend nicely into your existing site** instead of just showing raw HTML.
+
+---
+
+## How to integrate OAuth callback data nicely on your site:
+
+### Option A: **Render JSON and handle it in your frontend React app**
+
+Recommended if your frontend is React or similar.
+
+---
+
+### Step 1: Update your `/discord/callback` route to **return JSON data instead of HTML**
+
+Modify your Express callback like this:
+
+```js
+app.get('/discord/callback', async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).json({ error: 'Missing authorization code.' });
+
+  try {
+    const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
+      client_id: CLIENT_ID,
+      client_secret: CLIENT_SECRET,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: REDIRECT_URI,
+      scope: 'identify'
+    }), {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+
+    const accessToken = tokenResponse.data.access_token;
+
+    const userResponse = await axios.get('https://discord.com/api/users/@me', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    const user = userResponse.data;
+
+    // Instead of HTML, send JSON
+    res.json({ user, accessToken });
+
+  } catch (error) {
+    console.error(error?.response?.data || error);
+    res.status(500).json({ error: 'OAuth callback failed.' });
+  }
+});
+```
+
+---
+
+### Step 2: In your React frontend, create a component/page for `/discord/callback` that:
+
+* Reads the `code` query param from the URL
+* Calls your backend `/discord/callback?code=...` API (using fetch or axios)
+* Stores the user info (e.g., in React state or context)
+* Displays the user profile with styling
+
+---
+
+### Example React component (assuming React Router or Next.js):
+
+```jsx
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom'; // or useRouter for Next.js
+
+function useQuery() {
+  return new URLSearchParams(useLocation().search);
+}
+
+export default function DiscordCallback() {
+  const query = useQuery();
+  const code = query.get('code');
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!code) {
+      setError('No code found');
+      return;
+    }
+
+    fetch(`/discord/callback?code=${code}`)
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to fetch user data');
+        return res.json();
+      })
+      .then((data) => {
+        if (data.error) throw new Error(data.error);
+        setUser(data.user);
+      })
+      .catch((err) => setError(err.message));
+  }, [code]);
+
+  if (error) return <p>Error: {error}</p>;
+  if (!user) return <p>Loading your Discord profile...</p>;
+
+  return (
+    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+      <h1>Welcome, {user.username}#{user.discriminator}!</h1>
+      <img
+        src={`https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`}
+        alt="Avatar"
+        style={{ borderRadius: '50%', width: 128, height: 128 }}
+      />
+      <p>ID: {user.id}</p>
+      {/* Add any other profile info or navigation here */}
+    </div>
+  );
+}
+```
+
+---
+
+### Step 3: Route setup
+
+* Make sure your frontend routing sends `/discord/callback` requests to that React component (e.g., Next.js page or React Router route).
+
+---
+
+### Summary:
+
+| Backend                                                                              | Frontend                                                                                         |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Express `/discord/callback` route that exchanges code and **returns JSON user data** | React component that reads code from URL, fetches JSON from backend, and displays profile nicely |
+
+---
+
+If you want, I can generate a full minimal example repository or help with your current code — just share what your frontend framework is (React, Next.js, etc.) and how you serve your site!
