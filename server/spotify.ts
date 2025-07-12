@@ -93,14 +93,21 @@ class SpotifyAPI {
     try {
       const accessToken = await this.getAccessToken();
       
+      console.log('Attempting to fetch from Spotify API...');
+      console.log(`Authorization header: Bearer ${accessToken ? 'Set' : 'Not Set'}`);
+      
       const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
         headers: {
           'Authorization': `Bearer ${accessToken}`
         }
       });
 
+      console.log(`Spotify API Response Status: ${response.status}`);
+      console.log(`Spotify API Response Headers:`, Object.fromEntries(response.headers.entries()));
+
       if (response.status === 204) {
         // No content - not playing anything
+        console.log('Spotify: No content (204) - not playing anything');
         return {
           is_playing: false,
           track: null,
@@ -109,10 +116,22 @@ class SpotifyAPI {
       }
 
       if (!response.ok) {
-        throw new Error(`Spotify API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`Spotify API Error ${response.status}:`, errorText);
+        throw new Error(`Spotify API error: ${response.status} - ${errorText}`);
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+      console.log(`Spotify API Raw Response: ${responseText.substring(0, 200)}...`);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse Spotify response as JSON:', parseError);
+        console.error('Response text:', responseText);
+        throw new Error('Spotify API returned non-JSON response');
+      }
       
       return {
         is_playing: data.is_playing,
@@ -147,11 +166,25 @@ class SpotifyAPI {
         }
       });
 
+      console.log(`Spotify Recently Played Response Status: ${response.status}`);
+
       if (!response.ok) {
-        throw new Error(`Spotify API error: ${response.status}`);
+        const errorText = await response.text();
+        console.error(`Spotify Recently Played Error ${response.status}:`, errorText);
+        throw new Error(`Spotify API error: ${response.status} - ${errorText}`);
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+      console.log(`Spotify Recently Played Raw Response: ${responseText.substring(0, 200)}...`);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse Spotify recently played response as JSON:', parseError);
+        console.error('Response text:', responseText);
+        throw new Error('Spotify API returned non-JSON response');
+      }
       
       return data.items.map((item: any) => ({
         name: item.track.name,

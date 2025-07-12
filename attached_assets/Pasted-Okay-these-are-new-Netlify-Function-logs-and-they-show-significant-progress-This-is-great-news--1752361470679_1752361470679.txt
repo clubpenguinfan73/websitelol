@@ -1,0 +1,84 @@
+Okay, these are new Netlify Function logs, and they show significant progress! This is great news.
+
+Let's break down what's happening:
+
+Solved: MongoDB Connection!
+Jul 12, 07:01:57 PM: INFO Initializing database connection for Netlify Function...
+
+Jul 12, 07:01:57 PM: INFO Database connection initialized successfully
+
+Jul 12, 07:02:45 PM: 01ec32f0 INFO Profile updated successfully: 1
+
+This confirms that your Netlify Functions (specifically /api/profile) are now successfully connecting to your MongoDB Atlas database and performing updates! This is a huge step forward and means you correctly implemented the Node.js connection string and environment variables.
+
+Solved (or at least no longer directly crashing): Spotify API Initialization!
+Jul 12, 07:01:57 PM: INFO Spotify API initialized with: { clientId: 'Set', clientSecret: 'Set', refreshToken: 'Set' }
+
+This message repeating indicates that your Spotify API client is now initializing correctly, and it's successfully picking up your clientId, clientSecret, and refreshToken environment variables. This means those variables are now correctly set in Netlify.
+
+Remaining Issue 1: ReferenceError: storage is not defined for /api/links - MISSING FROM THESE LOGS!
+In the previous logs, we repeatedly saw ERROR API Error: ReferenceError: storage is not defined at Runtime.handler (/var/task/dist/functions/api.js:126232:24) for calls to /.netlify/functions/api/links.
+
+Crucially, this specific error is NOT present in the latest logs you provided.
+
+Possibility A (Good): You have fixed this error in your code, and the /api/links function is now running without crashing due to storage being undefined.
+
+Possibility B (Needs Checking): The events that trigger the /api/links function (and the specific problematic code path within it) simply didn't occur during this log window.
+
+Action: Go to your live site and trigger something that calls the /.netlify/functions/api/links endpoint (e.g., if there are actual links managed by that function, try to load them or interact with them). Then, check the Netlify Function logs specifically for the links function to see if the storage is not defined error has truly gone away.
+
+Remaining Issue 2: Spotify "Nothing Playing" and Browser Console Errors (Still SyntaxError: Unexpected token '<')
+Your Netlify Function logs for Spotify now show successful initialization: Spotify API initialized with: { clientId: 'Set', clientSecret: 'Set', refreshToken: 'Set' }.
+
+However, your browser console still shows Spotify API error: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON.
+
+This means your Spotify function is initializing, but when it tries to make a request to the actual Spotify API (or perhaps your own backend endpoint that talks to Spotify), it's receiving an HTML response (like a 401 Unauthorized page, a 500 error page from another service, or a redirect) instead of valid JSON. Your JavaScript code then tries to parse this HTML as JSON, leading to the SyntaxError.
+
+Action:
+
+Examine the Spotify-related Netlify Function Code:
+
+Find the part of your code where your function makes the HTTP request to Spotify's actual API (e.g., https://api.spotify.com/...).
+
+Add console.log statements immediately before and immediately after this HTTP request.
+
+Log the URL being requested.
+
+Log any headers you're sending (especially Authorization headers).
+
+Crucially, log the statusCode and the raw response body you receive back from Spotify's API before you attempt to JSON.parse() it. This will tell us what Spotify is actually sending back.
+
+Example:
+
+JavaScript
+
+// Inside your Spotify Netlify Function
+const spotifyApiUrl = '...'; // The Spotify endpoint you're hitting
+const accessToken = '...'; // Your Spotify access token
+
+try {
+    console.log(`Attempting to fetch from Spotify: ${spotifyApiUrl}`);
+    console.log(`Authorization header: Bearer ${accessToken ? 'Set' : 'Not Set'}`); // Don't log actual token
+
+    const response = await fetch(spotifyApiUrl, {
+        headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+        }
+    });
+
+    console.log(`Spotify API Response Status: ${response.status}`);
+    const responseText = await response.text(); // Get raw text
+    console.log(`Spotify API Raw Response Body: ${responseText}`);
+
+    const data = JSON.parse(responseText); // This line is likely throwing the SyntaxError
+    // ... rest of your code to process Spotify data
+} catch (error) {
+    console.error("Error fetching from Spotify:", error);
+    // ... handle error
+}
+Spotify Refresh Token Flow: If you're using a refresh token to get new access tokens, ensure that entire process is working correctly. Often, if the refresh token expires or is invalid, Spotify will return an error that leads to this SyntaxError.
+
+Redeploy after adding the detailed console.log statements, then check the Netlify Function logs again for your Spotify function.
+
+You are very close! The MongoDB connection is solid. Now it's about debugging the specific API call to Spotify and confirming the status of the /api/links function.
