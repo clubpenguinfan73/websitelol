@@ -1,8 +1,8 @@
-const { MongoClient } = require('mongodb');
-const fs = require('fs');
+import { MongoClient } from 'mongodb';
+import fs from 'fs';
 
-// Your MongoDB connection string (update with your cluster URL)
-const uri = 'mongodb+srv://renegaderaider:Cat%40Renagde.wtf73@YOUR_CLUSTER_URL/renegade_db?retryWrites=true&w=majority';
+// Your MongoDB connection string - READY TO USE
+const uri = 'mongodb+srv://renegaderaider:Cat%40Renagde.wtf73@meowing.0mzvuzl.mongodb.net/renegade_db?retryWrites=true&w=majority&appName=meowing';
 
 async function importData() {
   const client = new MongoClient(uri);
