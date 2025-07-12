@@ -214,6 +214,7 @@ export class DatabaseStorage implements IStorage {
           spotifyArtistName: profileData.spotifyArtistName || null,
           spotifyAlbumArt: profileData.spotifyAlbumArt || null,
           spotifyTrackUrl: profileData.spotifyTrackUrl || null,
+          profileEffect: profileData.profileEffect || 'none',
         })
         .where(eq(profiles.id, existing.id))
         .returning();
@@ -242,6 +243,7 @@ export class DatabaseStorage implements IStorage {
         spotifyArtistName: profileData.spotifyArtistName || null,
         spotifyAlbumArt: profileData.spotifyAlbumArt || null,
         spotifyTrackUrl: profileData.spotifyTrackUrl || null,
+        profileEffect: profileData.profileEffect || 'none',
       }).returning();
       return result[0];
     }

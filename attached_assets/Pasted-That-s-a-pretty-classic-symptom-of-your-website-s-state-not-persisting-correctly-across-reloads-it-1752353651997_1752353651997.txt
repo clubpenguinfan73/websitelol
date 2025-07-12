@@ -1,0 +1,60 @@
+That’s a pretty classic symptom of your website’s state not persisting correctly across reloads — it flips between two versions (default page and your custom page) every time you refresh.
+
+Here are the most common reasons and how to troubleshoot:
+
+---
+
+### 1. **Client-side state not persisting or mis-handled**
+
+If your site relies on JavaScript (React, Vue, etc.) to show the custom page after some state or data changes, but that state isn’t saved properly (e.g., in localStorage, cookies, or URL), then refreshing loses that state — causing fallback to the default page.
+
+* **Check:** Does your custom page depend on any client-side state or URL parameters?
+* **Fix:** Ensure the state is saved in a persistent place or encoded in the URL so a reload keeps the right page.
+
+---
+
+### 2. **Server-side caching or stale content**
+
+If your hosting or CDN caches the default page aggressively, your first refresh might get the cached version (default), and the next refresh fetches the updated page.
+
+* **Check:** Any caching layers on your host? CDN or proxies?
+* **Fix:** Clear cache or set proper cache headers to avoid stale content.
+
+---
+
+### 3. **Build or deploy inconsistency**
+
+If your deployment system is toggling between two versions of your site (e.g., deploying an old build and a new build alternately), the site will look like it “flips” every reload.
+
+* **Check:** Is your deployment automated and stable?
+* **Fix:** Rebuild and redeploy ensuring only one version is live.
+
+---
+
+### 4. **Multiple entry points or routing issues**
+
+If your site has client-side routing, but your server isn’t set up to handle it correctly, refreshing a URL other than the root can cause fallback to default content.
+
+* **Check:** Are you using a framework with client-side routing (React Router, Vue Router, etc.)?
+* **Fix:** Configure your server to always serve `index.html` for any route (e.g., Netlify `_redirects` or `.htaccess` rules).
+
+---
+
+### 5. **State stored in cookies/sessionStorage and overwritten**
+
+Sometimes, cookies or sessionStorage can get set/unset oddly, causing toggling behavior.
+
+* **Check:** Inspect browser storage between reloads.
+
+---
+
+### What I suggest to diagnose this:
+
+* Open your browser dev tools (F12) and watch the **Network** tab on reloads — see if the page loaded is the same or different.
+* Watch the **Console** tab for errors or logs related to state or routing.
+* Inspect **Application > Storage** for localStorage/sessionStorage/cookies changes after reload.
+* Share your front-end framework or deployment platform so I can suggest exact configs.
+
+---
+
+If you want, you can also share your repo or code snippet responsible for toggling pages, and I can help pinpoint the exact cause.

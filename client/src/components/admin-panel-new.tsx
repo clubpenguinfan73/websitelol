@@ -91,7 +91,9 @@ export default function AdminPanel({
   const updateProfileMutation = useMutation({
     mutationFn: (data: any) => apiRequest("/api/profile", "PUT", data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/profile"] });
+      // Clear all cache and force fresh fetch
+      queryClient.clear();
+      queryClient.refetchQueries({ queryKey: ["/api/profile"] });
       toast({
         title: "Profile updated successfully",
         description: "Your changes have been saved.",
