@@ -333,36 +333,25 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
                         ))}
                       </div>
                     </div>
-                    <p className="text-sm text-gray-400">
-                      Discord ID: {discordProfile.id}
-                    </p>
-                    {/* Show current activity if available */}
-                    {discordActivity && (
+
+                    {/* Show current activity status - prioritize Spotify */}
+                    {spotifyData && spotifyData.is_playing ? (
+                      <div className="text-xs text-gaming-cyan mt-1">
+                        <span className="font-medium">Listening to Spotify</span>
+                      </div>
+                    ) : discordActivity && (
                       <div className="text-xs text-gaming-cyan mt-1">
                         <span className="font-medium">
-                          {discordActivity.type === 2 ? 'Listening to:' : 
+                          {discordActivity.type === 2 ? 'Listening to Spotify' : 
                            discordActivity.type === 0 ? 'Playing:' : 
                            discordActivity.type === 1 ? 'Streaming:' : 
                            discordActivity.type === 3 ? 'Watching:' : 'Activity:'}
-                        </span> {discordActivity.name}
-                        {discordActivity.details && (
-                          <div className="text-gray-400">{discordActivity.details}</div>
-                        )}
-                        {discordActivity.state && (
-                          <div className="text-gray-400">{discordActivity.state}</div>
-                        )}
-                        {discordActivity.timestamps?.start && (
-                          <div className="text-gray-500 text-xs mt-1">
-                            Started: {new Date(discordActivity.timestamps.start).toLocaleTimeString()}
-                          </div>
-                        )}
+                        </span>
+                        {discordActivity.type !== 2 && ` ${discordActivity.name}`}
                       </div>
                     )}
                     <p className="text-sm text-gray-400 mb-2">this is where i belong</p>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="text-sm text-green-400">Online • Connected 24/7</span>
-                    </div>
+
                   </div>
                 </div>
               ) : (
@@ -373,7 +362,7 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
             </motion.div>
           )}
 
-          {/* Spotify Integration - Real-time tracking */}
+          {/* Spotify Integration - Dedicated widget under Discord */}
           {profile?.spotifyEnabled && (
             <motion.div
               className="bg-medium-gray/80 backdrop-blur-sm border border-light-gray/30 rounded-xl p-4 transition-all duration-200 hover:shadow-2xl"
