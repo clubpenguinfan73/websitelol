@@ -1,0 +1,85 @@
+Okay, thanks for the additional context. The image `image_9062d8.png` (and `image_90111c.png`, which is identical) clearly shows an "Update failed 500: Internal Error" message. This error directly corresponds to the `POST https://renegaderaider.wtf/.netlify/functions/api/profile 500 (Internal Server Error)` you're seeing in your browser console when attempting to upload a GIF.
+
+This confirms that even though the MongoDB connection for *profile updates* (via PUT requests) seems to be working, the specific operation of **uploading a GIF as a profile picture or background is still failing with a 500 Internal Server Error.**
+
+Let's combine this with the previous information to form a plan.
+
+**Recap of Confirmed Issues:**
+
+1.  **GIF Upload Failure:** "Update failed 500: Internal Error" when trying to upload a GIF for PFP or background. This is directly reflected as a `POST` 500 error in the console.
+2.  **Spotify "Nothing Playing" / `SyntaxError`:** Your live site still shows "Nothing playing" for Spotify, and the browser console logs a `SyntaxError: Unexpected token '<'` because it's receiving HTML instead of JSON from your Spotify-related Netlify Function. Your development environment works fine.
+3.  **MongoDB Python Driver Selection (Historical/Potential Issue):** Previous screenshots showed "Python" selected as the driver when trying to connect to MongoDB Atlas. While your recent logs indicated successful DB connection and profile *updates*, this original misconfiguration could still be relevant if different functions have different connection logic, or if you simply haven't updated the connection string on Netlify with the correct Node.js one.
+
+**Diagnosis for GIF Upload Failure (500 Error):**
+
+Since the "Update failed 500" happens when uploading a GIF, and given the general context of serverless functions:
+
+* **Serverless functions (like Netlify Functions) have limitations on handling large `multipart/form-data` bodies (which GIFs are).** They often require specialized parsing or streaming, and many developers offload direct file uploads to dedicated storage services.
+* The `ReferenceError: storage is not defined` error for `/api/links` in previous logs indicated that your function was trying to use a `storage` mechanism that wasn't set up. If your GIF upload process also uses this `storage` mechanism (e.g., Cloudinary, AWS S3, Supabase Storage), then the problem is likely still there for file uploads, even if it's not explicitly showing in the latest `/api/links` logs you provided.
+* **A 500 error means your Netlify Function crashed.** This could be because:
+    * It's trying to parse the incoming GIF data incorrectly.
+    * It's failing to connect to, or authenticate with, your chosen image storage service (e.g., Cloudinary, S3).
+    * The image file size or format exceeds some limit within your function or the storage service.
+    * The `DatabaseStorage` class you mentioned previously is working for *links*, but the *actual file upload* part might not be correctly integrated with an external storage service.
+
+---
+
+### **Action Plan to Address All Remaining Issues:**
+
+**Part 1: Fix GIF Upload 500 Error**
+
+This will require inspecting the code for your `/.netlify/functions/api/profile` function, specifically the part that handles `POST` requests and image uploads.
+
+1.  **Review GIF Upload Code:**
+    * Locate the `/.netlify/functions/api/profile.js` (or `.ts`) file.
+    * Find the logic for handling `POST` requests, especially when a profile picture or background image is sent.
+    * **How are you handling `multipart/form-data`?** Netlify Functions don't natively parse `multipart/form-data` directly from `event.body`. You usually need a library like `formidable` or `busboy` on the server-side, or you send the image data to an external service directly from the frontend.
+    * **Where are you storing the GIFs?** GIFs should *not* be stored directly in MongoDB. They should be uploaded to a dedicated image storage service (like Cloudinary, AWS S3, Imgur, etc.), and *only the URL* to the GIF should be stored in MongoDB.
+    * **If using an external storage service:**
+        * Ensure the client for that service (e.g., `cloudinary.v2`) is correctly initialized in your function.
+        * Check that all environment variables required by that service (e.g., `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` for Cloudinary) are **correctly set in Netlify's Environment Variables.** This is a very common cause of 500s.
+        * Add `console.log` statements throughout your image upload process:
+            * Before parsing `event.body`.
+            * After parsing `event.body` (to see what data you successfully extracted).
+            * Before making the call to the external storage service.
+            * After receiving the response from the external storage service (log status code and response).
+            * Any `try...catch` blocks around the upload logic should log the full `error` object.
+
+2.  **Check Netlify Function Logs for `api/profile` POST Requests:**
+    * After adding `console.log` statements and attempting an upload, go to Netlify Dashboard -> Your Site -> Functions -> `api/profile`.
+    * **Look for logs related to the `POST` method.** The detailed error message will tell you exactly why it's crashing. It might be a parsing error, an authentication error with your storage service, or something else.
+
+---
+
+**Part 2: Fix Spotify "Nothing Playing" / `SyntaxError`**
+
+This problem still points to environment variable issues on Netlify or a problem in your Spotify API token refresh logic for the live environment.
+
+1.  **Generate a FRESH Spotify Refresh Token:**
+    * Go through the Spotify authorization flow *again* in your **development environment** (your Replit URL `https://77cf336c-2f26-4d07-9c68-10618193f317-00-39ivox5wxaoxv.worf.replit.dev`).
+    * Get a brand new `refresh_token`.
+    * **Copy this new token carefully.**
+
+2.  **Update Netlify Environment Variables for Spotify (Again, critical):**
+    * Go to Netlify Dashboard -> Your Site -> Site settings -> Build & deploy -> Environment variables.
+    * **Edit `SPOTIFY_REFRESH_TOKEN`** and paste the *new* token.
+    * **Confirm `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are exact matches** to your Spotify Developer Dashboard.
+    * **Verify `SPOTIFY_REDIRECT_URI`** in Netlify matches your live Netlify site's redirect URL exactly, and that this URL is registered in your Spotify Developer Dashboard.
+
+3.  **Add Debugging to Spotify Function (if not already there):**
+    * Ensure your Spotify-related Netlify Function has `console.log` statements to show:
+        * The exact URL it's calling to Spotify.
+        * The HTTP status code and *raw response body (`await response.text()`)* from Spotify's API. This is the crucial log that will show you the HTML.
+
+---
+
+**Part 3: Redeploy and Re-Check Logs**
+
+1.  **Push all your code changes** (including new `console.log`s) to GitHub to trigger a new Netlify deploy.
+2.  Once deployed, visit your live site (`https://renegaderaider.wtf`).
+3.  **Attempt to upload a GIF.**
+4.  **Wait for the Spotify section to try to load.**
+5.  **Go to Netlify Dashboard -> Your Site -> Functions.**
+6.  **Check the logs for `api/profile` (specifically the POST method) and your Spotify-related function.** The new logs should provide the exact reasons for the `500` and the `SyntaxError`.
+
+The key to solving these persistent issues is gathering the *specific* error messages or unexpected responses that appear in the Netlify Function logs when these actions are triggered on the live site.

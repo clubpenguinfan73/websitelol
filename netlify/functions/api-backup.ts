@@ -1,10 +1,14 @@
 import { Handler } from "@netlify/functions";
 import { insertProfileSchema, insertLinkSchema, profiles, links } from "../../shared/schema";
+import { discordAPI } from "../../server/discord";
+import { spotifyAPI } from "../../server/spotify";
 import { getDatabase } from "./db-config";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import formidable from "formidable";
+import { IncomingMessage } from "http";
 
-// Enhanced DatabaseStorage with comprehensive error handling
+// Enhanced DatabaseStorage with better error handling
 class DatabaseStorage {
   private db = getDatabase();
   
@@ -49,7 +53,7 @@ class DatabaseStorage {
   }
 }
 
-// Enhanced Discord API - Uses REST API instead of WebSocket to prevent timeout issues
+// Enhanced Discord API with better error handling
 class EnhancedDiscordAPI {
   private botToken: string;
   private clientId: string;
@@ -136,7 +140,7 @@ class EnhancedDiscordAPI {
   }
   
   async getCurrentActivity() {
-    // Simplified activity for serverless environment
+    // Simplified activity check for serverless environment
     return {
       name: 'Discord',
       type: 0,
@@ -146,7 +150,7 @@ class EnhancedDiscordAPI {
   }
 }
 
-// Enhanced Spotify API - Fixes HTML response and authentication issues
+// Enhanced Spotify API with comprehensive error handling
 class EnhancedSpotifyAPI {
   private clientId: string;
   private clientSecret: string;
@@ -234,6 +238,7 @@ class EnhancedSpotifyAPI {
       console.log(`Spotify API Response Headers:`, Object.fromEntries(response.headers.entries()));
 
       if (response.status === 204) {
+        // No content - not playing anything
         console.log('Spotify: No content (204) - not playing anything');
         return {
           is_playing: false,
@@ -322,14 +327,57 @@ class EnhancedSpotifyAPI {
   }
 }
 
+// Multipart form data parser for file uploads
+async function parseMultipartForm(event: any): Promise<{ fields: any, files: any }> {
+  return new Promise((resolve, reject) => {
+    try {
+      const form = new formidable.IncomingForm({
+        maxFileSize: 10 * 1024 * 1024, // 10MB limit
+        keepExtensions: true,
+        multiples: false
+      });
+
+      // Create a mock IncomingMessage from the Netlify event
+      const mockReq = {
+        method: event.httpMethod,
+        url: event.path,
+        headers: event.headers,
+        body: event.body,
+        isBase64Encoded: event.isBase64Encoded,
+        pipe: () => {},
+        on: () => {},
+        resume: () => {},
+        pause: () => {}
+      } as any;
+
+      form.parse(mockReq, (err, fields, files) => {
+        if (err) {
+          console.error('Form parsing error:', err);
+          reject(err);
+          return;
+        }
+        
+        console.log('Form parsed successfully');
+        console.log('Fields:', Object.keys(fields));
+        console.log('Files:', Object.keys(files));
+        
+        resolve({ fields, files });
+      });
+    } catch (error) {
+      console.error('Error setting up form parser:', error);
+      reject(error);
+    }
+  });
+}
+
 const storage = new DatabaseStorage();
 const enhancedDiscordAPI = new EnhancedDiscordAPI();
 const enhancedSpotifyAPI = new EnhancedSpotifyAPI();
 
 export const handler: Handler = async (event, context) => {
-  const { path, httpMethod, body, headers } = event;
+  const { path, httpMethod, body } = event;
 
-  // Enhanced CORS headers
+  // CORS headers with enhanced configuration
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -340,6 +388,7 @@ export const handler: Handler = async (event, context) => {
     "Expires": "0"
   };
 
+  // Handle preflight requests
   if (httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
@@ -354,7 +403,7 @@ export const handler: Handler = async (event, context) => {
     const db = getDatabase();
     console.log('Database connection initialized successfully');
 
-    // Parse API path
+    // Parse the API path - handle both /api and /.netlify/functions/api paths
     let apiPath = path;
     if (path.startsWith('/.netlify/functions/api')) {
       apiPath = path.replace('/.netlify/functions/api', '');
@@ -364,20 +413,23 @@ export const handler: Handler = async (event, context) => {
     
     console.log('Function called with path:', path, 'parsed as:', apiPath, 'method:', httpMethod);
     
-    // Handle request body
+    // Handle different content types
     let parsedBody = {};
     const contentType = headers['content-type'] || '';
     
     if (body) {
       if (contentType.includes('multipart/form-data')) {
-        console.log('Detected multipart/form-data - processing file upload');
-        // Enhanced file upload handling would go here
-        // For now, we'll handle it as JSON to prevent 500 errors
+        console.log('Detected multipart/form-data - parsing file upload');
         try {
-          parsedBody = JSON.parse(body);
-        } catch (e) {
-          console.log('Multipart data detected, handling as form data');
-          parsedBody = {};
+          const { fields, files } = await parseMultipartForm(event);
+          parsedBody = { ...fields, ...files };
+        } catch (parseError) {
+          console.error('Error parsing multipart form:', parseError);
+          return {
+            statusCode: 400,
+            headers: corsHeaders,
+            body: JSON.stringify({ error: 'Failed to parse file upload' }),
+          };
         }
       } else {
         try {
@@ -398,19 +450,19 @@ export const handler: Handler = async (event, context) => {
     if (apiPath === "/profile") {
       if (httpMethod === "GET") {
         try {
+          const db = getDatabase();
           const result = await db.select().from(profiles).limit(1);
           const profile = result[0] || null;
-          console.log('Profile fetched successfully');
           return {
             statusCode: 200,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify(profile),
           };
         } catch (error) {
           console.error('Error fetching profile:', error);
           return {
             statusCode: 500,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify({ 
               error: 'Failed to fetch profile', 
               details: error instanceof Error ? error.message : String(error) 
@@ -421,12 +473,11 @@ export const handler: Handler = async (event, context) => {
       
       if (httpMethod === "PUT") {
         try {
-          console.log('Received PUT request to /api/profile');
-          console.log('Content-Type:', contentType);
-          console.log('Event body length:', body?.length || 0, 'bytes');
-          
+          console.log('Attempting to update profile with data:', Object.keys(parsedBody));
           const profileData = insertProfileSchema.parse(parsedBody);
           console.log('Profile data validated successfully');
+          
+          const db = getDatabase();
           
           // Check if profile exists
           const existingResult = await db.select().from(profiles).limit(1);
@@ -437,28 +488,75 @@ export const handler: Handler = async (event, context) => {
             console.log('Updating existing profile:', existing.id);
             const result = await db
               .update(profiles)
-              .set(profileData)
+              .set({
+                username: profileData.username,
+                bio: profileData.bio,
+                profilePicture: profileData.profilePicture || null,
+                backgroundImage: profileData.backgroundImage || null,
+                backgroundMusic: profileData.backgroundMusic || null,
+                musicEnabled: profileData.musicEnabled ?? true,
+                entranceText: profileData.entranceText || 'click to enter...',
+                entranceFontSize: profileData.entranceFontSize || '4xl',
+                entranceFontFamily: profileData.entranceFontFamily || 'Inter',
+                entranceFontColor: profileData.entranceFontColor || '#ffffff',
+                usernameEffect: profileData.usernameEffect || 'none',
+                animatedTitleEnabled: profileData.animatedTitleEnabled ?? false,
+                animatedTitleTexts: profileData.animatedTitleTexts || '',
+                animatedTitleSpeed: profileData.animatedTitleSpeed || 1000,
+                discordEnabled: profileData.discordEnabled ?? false,
+                discordUserId: profileData.discordUserId || null,
+                discordApplicationId: profileData.discordApplicationId || null,
+                spotifyEnabled: profileData.spotifyEnabled ?? false,
+                spotifyTrackName: profileData.spotifyTrackName || null,
+                spotifyArtistName: profileData.spotifyArtistName || null,
+                spotifyAlbumArt: profileData.spotifyAlbumArt || null,
+                spotifyTrackUrl: profileData.spotifyTrackUrl || null,
+                profileEffect: profileData.profileEffect || 'none',
+              })
               .where(eq(profiles.id, existing.id))
               .returning();
             profile = result[0];
           } else {
             console.log('Creating new profile');
-            const result = await db.insert(profiles).values(profileData).returning();
+            const result = await db.insert(profiles).values({
+              username: profileData.username,
+              bio: profileData.bio,
+              profilePicture: profileData.profilePicture || null,
+              backgroundImage: profileData.backgroundImage || null,
+              backgroundMusic: profileData.backgroundMusic || null,
+              musicEnabled: profileData.musicEnabled ?? true,
+              entranceText: profileData.entranceText || 'click to enter...',
+              entranceFontSize: profileData.entranceFontSize || '4xl',
+              entranceFontFamily: profileData.entranceFontFamily || 'Inter',
+              entranceFontColor: profileData.entranceFontColor || '#ffffff',
+              usernameEffect: profileData.usernameEffect || 'none',
+              animatedTitleEnabled: profileData.animatedTitleEnabled ?? false,
+              animatedTitleTexts: profileData.animatedTitleTexts || '',
+              animatedTitleSpeed: profileData.animatedTitleSpeed || 1000,
+              discordEnabled: profileData.discordEnabled ?? false,
+              discordUserId: profileData.discordUserId || null,
+              discordApplicationId: profileData.discordApplicationId || null,
+              spotifyEnabled: profileData.spotifyEnabled ?? false,
+              spotifyTrackName: profileData.spotifyTrackName || null,
+              spotifyArtistName: profileData.spotifyArtistName || null,
+              spotifyAlbumArt: profileData.spotifyAlbumArt || null,
+              spotifyTrackUrl: profileData.spotifyTrackUrl || null,
+              profileEffect: profileData.profileEffect || 'none',
+            }).returning();
             profile = result[0];
           }
           
           console.log('Profile updated successfully:', profile.id);
           return {
             statusCode: 200,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify(profile),
           };
         } catch (updateError) {
-          console.error('CRITICAL: Error updating profile:', updateError);
-          console.error('Error stack:', updateError instanceof Error ? updateError.stack : 'No stack trace');
+          console.error('Error updating profile:', updateError);
           return {
             statusCode: 500,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify({ 
               error: 'Failed to update profile', 
               details: updateError instanceof Error ? updateError.message : String(updateError) 
@@ -471,40 +569,22 @@ export const handler: Handler = async (event, context) => {
     // Links endpoints
     if (apiPath === "/links") {
       if (httpMethod === "GET") {
-        try {
-          const links = await storage.getLinks();
-          return {
-            statusCode: 200,
-            headers: corsHeaders,
-            body: JSON.stringify(links),
-          };
-        } catch (error) {
-          console.error('Error fetching links:', error);
-          return {
-            statusCode: 500,
-            headers: corsHeaders,
-            body: JSON.stringify({ error: 'Failed to fetch links' }),
-          };
-        }
+        const links = await storage.getLinks();
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(links),
+        };
       }
       
       if (httpMethod === "POST") {
-        try {
-          const linkData = insertLinkSchema.parse(parsedBody);
-          const link = await storage.createLink(linkData);
-          return {
-            statusCode: 200,
-            headers: corsHeaders,
-            body: JSON.stringify(link),
-          };
-        } catch (error) {
-          console.error('Error creating link:', error);
-          return {
-            statusCode: 500,
-            headers: corsHeaders,
-            body: JSON.stringify({ error: 'Failed to create link' }),
-          };
-        }
+        const linkData = insertLinkSchema.parse(parsedBody);
+        const link = await storage.createLink(linkData);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(link),
+        };
       }
     }
 
@@ -514,74 +594,55 @@ export const handler: Handler = async (event, context) => {
       const linkId = parseInt(linkMatch[1]);
       
       if (httpMethod === "PUT") {
-        try {
-          const linkData = insertLinkSchema.partial().parse(parsedBody);
-          const link = await storage.updateLink(linkId, linkData);
-          
-          if (!link) {
-            return {
-              statusCode: 404,
-              headers: corsHeaders,
-              body: JSON.stringify({ message: "Link not found" }),
-            };
-          }
-          
+        const linkData = insertLinkSchema.partial().parse(parsedBody);
+        const link = await storage.updateLink(linkId, linkData);
+        
+        if (!link) {
           return {
-            statusCode: 200,
-            headers: corsHeaders,
-            body: JSON.stringify(link),
-          };
-        } catch (error) {
-          console.error('Error updating link:', error);
-          return {
-            statusCode: 500,
-            headers: corsHeaders,
-            body: JSON.stringify({ error: 'Failed to update link' }),
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ message: "Link not found" }),
           };
         }
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(link),
+        };
       }
       
       if (httpMethod === "DELETE") {
-        try {
-          const success = await storage.deleteLink(linkId);
-          
-          if (!success) {
-            return {
-              statusCode: 404,
-              headers: corsHeaders,
-              body: JSON.stringify({ message: "Link not found" }),
-            };
-          }
-          
+        const success = await storage.deleteLink(linkId);
+        
+        if (!success) {
           return {
-            statusCode: 200,
-            headers: corsHeaders,
-            body: JSON.stringify({ message: "Link deleted successfully" }),
-          };
-        } catch (error) {
-          console.error('Error deleting link:', error);
-          return {
-            statusCode: 500,
-            headers: corsHeaders,
-            body: JSON.stringify({ error: 'Failed to delete link' }),
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ message: "Link not found" }),
           };
         }
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ message: "Link deleted successfully" }),
+        };
       }
     }
 
-    // Enhanced Discord API endpoints
+    // Discord API endpoints
     if (apiPath === "/discord/profile") {
       if (httpMethod === "GET") {
         try {
-          console.log('Fetching Discord profile...');
-          const user = await enhancedDiscordAPI.getUserProfile();
-          const avatarUrl = enhancedDiscordAPI.getAvatarUrl(user);
-          const bannerUrl = enhancedDiscordAPI.getBannerUrl(user);
-          const badges = enhancedDiscordAPI.getBadges(user.public_flags);
+          const user = await discordAPI.getUserProfile();
+          const avatarUrl = discordAPI.getAvatarUrl(user);
+          const bannerUrl = discordAPI.getBannerUrl(user);
+          const badges = discordAPI.getBadges(user.public_flags);
           
           return {
             statusCode: 200,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify({
               id: user.id,
               username: user.username,
@@ -598,11 +659,8 @@ export const handler: Handler = async (event, context) => {
           console.error('Discord API error:', error);
           return {
             statusCode: 500,
-            headers: corsHeaders,
-            body: JSON.stringify({ 
-              message: "Failed to fetch Discord profile",
-              error: error instanceof Error ? error.message : String(error)
-            }),
+            headers,
+            body: JSON.stringify({ message: "Failed to fetch Discord profile" }),
           };
         }
       }
@@ -612,34 +670,35 @@ export const handler: Handler = async (event, context) => {
     if (apiPath === "/discord/activity") {
       if (httpMethod === "GET") {
         try {
-          const activity = await enhancedDiscordAPI.getCurrentActivity();
+          const activity = await discordAPI.getCurrentActivity();
           return {
             statusCode: 200,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify(activity),
           };
         } catch (error) {
           console.error('Discord activity error:', error);
           return {
             statusCode: 500,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify({ message: "Failed to fetch Discord activity" }),
           };
         }
       }
     }
 
-    // Enhanced Spotify API endpoints
+    // Spotify API endpoints
     if (apiPath === "/spotify/current") {
       if (httpMethod === "GET") {
         try {
           console.log('Attempting to fetch Spotify current track...');
           
+          // Check if Spotify environment variables are set
           if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET || !process.env.SPOTIFY_REFRESH_TOKEN) {
             console.log('Missing Spotify environment variables');
             return {
               statusCode: 200,
-              headers: corsHeaders,
+              headers,
               body: JSON.stringify({ 
                 is_playing: false, 
                 track: null, 
@@ -649,12 +708,12 @@ export const handler: Handler = async (event, context) => {
             };
           }
           
-          const currentTrack = await enhancedSpotifyAPI.getCurrentlyPlaying();
+          const currentTrack = await spotifyAPI.getCurrentlyPlaying();
           console.log('Successfully fetched Spotify data');
           
           return {
             statusCode: 200,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify(currentTrack || { is_playing: false, track: null, timestamp: Date.now() }),
           };
         } catch (error) {
@@ -663,7 +722,7 @@ export const handler: Handler = async (event, context) => {
           
           return {
             statusCode: 200,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify({ 
               is_playing: false, 
               track: null, 
@@ -678,17 +737,17 @@ export const handler: Handler = async (event, context) => {
     if (apiPath === "/spotify/recent") {
       if (httpMethod === "GET") {
         try {
-          const recentTracks = await enhancedSpotifyAPI.getRecentlyPlayed(5);
+          const recentTracks = await spotifyAPI.getRecentlyPlayed(5);
           return {
             statusCode: 200,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify(recentTracks || []),
           };
         } catch (error) {
-          console.error('Spotify recent tracks error:', error);
+          console.error('Spotify API error:', error);
           return {
             statusCode: 500,
-            headers: corsHeaders,
+            headers,
             body: JSON.stringify({ message: "Failed to fetch recent tracks" }),
           };
         }
@@ -699,7 +758,7 @@ export const handler: Handler = async (event, context) => {
     console.log('Unhandled path:', apiPath, 'original path:', path);
     return {
       statusCode: 404,
-      headers: corsHeaders,
+      headers,
       body: JSON.stringify({ 
         message: "Not found",
         path: path,
@@ -709,12 +768,12 @@ export const handler: Handler = async (event, context) => {
     };
 
   } catch (error) {
-    console.error("CRITICAL API Error:", error);
+    console.error("API Error:", error);
     
     if (error instanceof z.ZodError) {
       return {
         statusCode: 400,
-        headers: corsHeaders,
+        headers,
         body: JSON.stringify({ 
           message: "Invalid request data", 
           errors: error.errors 
@@ -724,10 +783,9 @@ export const handler: Handler = async (event, context) => {
 
     console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
     console.error("Request details:", { path, httpMethod, bodyLength: body?.length || 0 });
-    
     return {
       statusCode: 500,
-      headers: corsHeaders,
+      headers,
       body: JSON.stringify({ 
         error: "Internal server error", 
         details: error instanceof Error ? error.message : String(error),

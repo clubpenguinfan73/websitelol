@@ -1,10 +1,14 @@
 import { Handler } from "@netlify/functions";
 import { insertProfileSchema, insertLinkSchema, profiles, links } from "../../shared/schema";
+import { discordAPI } from "../../server/discord";
+import { spotifyAPI } from "../../server/spotify";
 import { getDatabase } from "./db-config";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import formidable from "formidable";
+import { IncomingMessage } from "http";
 
-// Enhanced DatabaseStorage with comprehensive error handling
+// Enhanced DatabaseStorage with better error handling
 class DatabaseStorage {
   private db = getDatabase();
   
@@ -49,7 +53,7 @@ class DatabaseStorage {
   }
 }
 
-// Enhanced Discord API - Uses REST API instead of WebSocket to prevent timeout issues
+// Enhanced Discord API with better error handling
 class EnhancedDiscordAPI {
   private botToken: string;
   private clientId: string;
@@ -136,7 +140,7 @@ class EnhancedDiscordAPI {
   }
   
   async getCurrentActivity() {
-    // Simplified activity for serverless environment
+    // Simplified activity check for serverless environment
     return {
       name: 'Discord',
       type: 0,
@@ -146,7 +150,7 @@ class EnhancedDiscordAPI {
   }
 }
 
-// Enhanced Spotify API - Fixes HTML response and authentication issues
+// Enhanced Spotify API with comprehensive error handling
 class EnhancedSpotifyAPI {
   private clientId: string;
   private clientSecret: string;
@@ -234,6 +238,7 @@ class EnhancedSpotifyAPI {
       console.log(`Spotify API Response Headers:`, Object.fromEntries(response.headers.entries()));
 
       if (response.status === 204) {
+        // No content - not playing anything
         console.log('Spotify: No content (204) - not playing anything');
         return {
           is_playing: false,
@@ -322,6 +327,49 @@ class EnhancedSpotifyAPI {
   }
 }
 
+// Multipart form data parser for file uploads
+async function parseMultipartForm(event: any): Promise<{ fields: any, files: any }> {
+  return new Promise((resolve, reject) => {
+    try {
+      const form = new formidable.IncomingForm({
+        maxFileSize: 10 * 1024 * 1024, // 10MB limit
+        keepExtensions: true,
+        multiples: false
+      });
+
+      // Create a mock IncomingMessage from the Netlify event
+      const mockReq = {
+        method: event.httpMethod,
+        url: event.path,
+        headers: event.headers,
+        body: event.body,
+        isBase64Encoded: event.isBase64Encoded,
+        pipe: () => {},
+        on: () => {},
+        resume: () => {},
+        pause: () => {}
+      } as any;
+
+      form.parse(mockReq, (err, fields, files) => {
+        if (err) {
+          console.error('Form parsing error:', err);
+          reject(err);
+          return;
+        }
+        
+        console.log('Form parsed successfully');
+        console.log('Fields:', Object.keys(fields));
+        console.log('Files:', Object.keys(files));
+        
+        resolve({ fields, files });
+      });
+    } catch (error) {
+      console.error('Error setting up form parser:', error);
+      reject(error);
+    }
+  });
+}
+
 const storage = new DatabaseStorage();
 const enhancedDiscordAPI = new EnhancedDiscordAPI();
 const enhancedSpotifyAPI = new EnhancedSpotifyAPI();
@@ -329,7 +377,7 @@ const enhancedSpotifyAPI = new EnhancedSpotifyAPI();
 export const handler: Handler = async (event, context) => {
   const { path, httpMethod, body, headers } = event;
 
-  // Enhanced CORS headers
+  // CORS headers with enhanced configuration
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
@@ -340,6 +388,7 @@ export const handler: Handler = async (event, context) => {
     "Expires": "0"
   };
 
+  // Handle preflight requests
   if (httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
@@ -354,7 +403,7 @@ export const handler: Handler = async (event, context) => {
     const db = getDatabase();
     console.log('Database connection initialized successfully');
 
-    // Parse API path
+    // Parse the API path - handle both /api and /.netlify/functions/api paths
     let apiPath = path;
     if (path.startsWith('/.netlify/functions/api')) {
       apiPath = path.replace('/.netlify/functions/api', '');
@@ -364,20 +413,23 @@ export const handler: Handler = async (event, context) => {
     
     console.log('Function called with path:', path, 'parsed as:', apiPath, 'method:', httpMethod);
     
-    // Handle request body
+    // Handle different content types
     let parsedBody = {};
     const contentType = headers['content-type'] || '';
     
     if (body) {
       if (contentType.includes('multipart/form-data')) {
-        console.log('Detected multipart/form-data - processing file upload');
-        // Enhanced file upload handling would go here
-        // For now, we'll handle it as JSON to prevent 500 errors
+        console.log('Detected multipart/form-data - parsing file upload');
         try {
-          parsedBody = JSON.parse(body);
-        } catch (e) {
-          console.log('Multipart data detected, handling as form data');
-          parsedBody = {};
+          const { fields, files } = await parseMultipartForm(event);
+          parsedBody = { ...fields, ...files };
+        } catch (parseError) {
+          console.error('Error parsing multipart form:', parseError);
+          return {
+            statusCode: 400,
+            headers: corsHeaders,
+            body: JSON.stringify({ error: 'Failed to parse file upload' }),
+          };
         }
       } else {
         try {
@@ -394,7 +446,7 @@ export const handler: Handler = async (event, context) => {
       }
     }
 
-    // Profile endpoints
+    // Profile endpoints with enhanced error handling
     if (apiPath === "/profile") {
       if (httpMethod === "GET") {
         try {
@@ -424,6 +476,43 @@ export const handler: Handler = async (event, context) => {
           console.log('Received PUT request to /api/profile');
           console.log('Content-Type:', contentType);
           console.log('Event body length:', body?.length || 0, 'bytes');
+          console.log('Is Base64 encoded?', event.isBase64Encoded);
+          
+          // Handle multipart form data (file uploads)
+          if (contentType.includes('multipart/form-data')) {
+            console.log('Processing file upload...');
+            
+            // For now, extract basic profile data - file upload to external storage would happen here
+            const profileData = {
+              username: parsedBody.username || 'Cat',
+              bio: parsedBody.bio || 'lol xd',
+              profilePicture: parsedBody.profilePicture || null,
+              backgroundImage: parsedBody.backgroundImage || null,
+              backgroundMusic: parsedBody.backgroundMusic || null,
+              musicEnabled: parsedBody.musicEnabled ?? true,
+              entranceText: parsedBody.entranceText || 'click to enter...',
+              entranceFontSize: parsedBody.entranceFontSize || '4xl',
+              entranceFontFamily: parsedBody.entranceFontFamily || 'Inter',
+              entranceFontColor: parsedBody.entranceFontColor || '#ffffff',
+              usernameEffect: parsedBody.usernameEffect || 'none',
+              animatedTitleEnabled: parsedBody.animatedTitleEnabled ?? false,
+              animatedTitleTexts: parsedBody.animatedTitleTexts || '',
+              animatedTitleSpeed: parsedBody.animatedTitleSpeed || 1000,
+              discordEnabled: parsedBody.discordEnabled ?? false,
+              discordUserId: parsedBody.discordUserId || null,
+              discordApplicationId: parsedBody.discordApplicationId || null,
+              spotifyEnabled: parsedBody.spotifyEnabled ?? false,
+              spotifyTrackName: parsedBody.spotifyTrackName || null,
+              spotifyArtistName: parsedBody.spotifyArtistName || null,
+              spotifyAlbumArt: parsedBody.spotifyAlbumArt || null,
+              spotifyTrackUrl: parsedBody.spotifyTrackUrl || null,
+              profileEffect: parsedBody.profileEffect || 'none',
+            };
+            
+            console.log('Processing profile data from form upload');
+          } else {
+            console.log('Processing JSON profile update');
+          }
           
           const profileData = insertProfileSchema.parse(parsedBody);
           console.log('Profile data validated successfully');
@@ -437,7 +526,31 @@ export const handler: Handler = async (event, context) => {
             console.log('Updating existing profile:', existing.id);
             const result = await db
               .update(profiles)
-              .set(profileData)
+              .set({
+                username: profileData.username,
+                bio: profileData.bio,
+                profilePicture: profileData.profilePicture || null,
+                backgroundImage: profileData.backgroundImage || null,
+                backgroundMusic: profileData.backgroundMusic || null,
+                musicEnabled: profileData.musicEnabled ?? true,
+                entranceText: profileData.entranceText || 'click to enter...',
+                entranceFontSize: profileData.entranceFontSize || '4xl',
+                entranceFontFamily: profileData.entranceFontFamily || 'Inter',
+                entranceFontColor: profileData.entranceFontColor || '#ffffff',
+                usernameEffect: profileData.usernameEffect || 'none',
+                animatedTitleEnabled: profileData.animatedTitleEnabled ?? false,
+                animatedTitleTexts: profileData.animatedTitleTexts || '',
+                animatedTitleSpeed: profileData.animatedTitleSpeed || 1000,
+                discordEnabled: profileData.discordEnabled ?? false,
+                discordUserId: profileData.discordUserId || null,
+                discordApplicationId: profileData.discordApplicationId || null,
+                spotifyEnabled: profileData.spotifyEnabled ?? false,
+                spotifyTrackName: profileData.spotifyTrackName || null,
+                spotifyArtistName: profileData.spotifyArtistName || null,
+                spotifyAlbumArt: profileData.spotifyAlbumArt || null,
+                spotifyTrackUrl: profileData.spotifyTrackUrl || null,
+                profileEffect: profileData.profileEffect || 'none',
+              })
               .where(eq(profiles.id, existing.id))
               .returning();
             profile = result[0];
@@ -635,6 +748,7 @@ export const handler: Handler = async (event, context) => {
         try {
           console.log('Attempting to fetch Spotify current track...');
           
+          // Check if Spotify environment variables are set
           if (!process.env.SPOTIFY_CLIENT_ID || !process.env.SPOTIFY_CLIENT_SECRET || !process.env.SPOTIFY_REFRESH_TOKEN) {
             console.log('Missing Spotify environment variables');
             return {

@@ -1,0 +1,211 @@
+Okay, I've got the latest Netlify Function logs. This is valuable, as it shows new errors and reinforces existing ones. I will integrate these directly into the comprehensive instructions for the Replit AI.
+
+-----
+
+**To Replit AI:**
+
+My live Netlify site (`https://renegaderaider.wtf`) is experiencing several backend issues that are preventing full functionality, even though the development environment (Replit preview `https://77cf336c-2f26-4d07-9c68-10618193f317-00-39ivox5wxaoxv.worf.replit.dev`) appears to work correctly.
+
+**New Logs Provided (July 12, 07:12:56 PM onwards):**
+
+  * **Discord Error:** `d1929f07 ERROR Failed to initialize Discord bot: Error: Opening handshake has timed out at ClientRequest.<anonymous> (/var/task/dist/functions/api.js:97420:11)`
+  * `Spotify API initialized with: { clientId: 'Set', clientSecret: 'Set', refreshToken: 'Set' }`
+  * `Initializing database connection for Netlify Function... Database connection initialized successfully` (repeated)
+  * `Function called with path: /.netlify/functions/api/links parsed as: /links method: GET` (no error shown in these logs for links)
+  * `Function called with path: /.netlify/functions/api/profile parsed as: /profile method: GET` (no error shown in these logs for GET profile)
+  * `Discord bot logged in as site#0919` (This is confusing given the handshake timeout error above. It suggests the bot *sometimes* logs in or a different invocation succeeded).
+
+**Previous Browser Console Logs (still relevant):**
+
+  * `Spotify API returned non-JSON response` (repeating frequently).
+  * `PUT https://renegaderaider.wtf/.netlify/functions/api/profile 500 (Internal Server Error)`.
+  * `Profile update error: Error: 500: Internal Error. ID: 01K00EKSFMWZNV0CZ33TBWNGK2`.
+  * Successful GIF file loading in the browser, but then the 500 error on the PUT request.
+
+-----
+
+**Problem 1: GIF Upload Failure (500 Internal Error on PUT /api/profile)**
+
+  * **Symptoms:** Frontend displays "Update failed 500: Internal Error" when trying to upload a GIF. Browser console shows a `PUT` request to `/.netlify/functions/api/profile` returning a `500 (Internal Server Error)`.
+
+  * **Diagnosis:** The Netlify Function handling the `PUT` request to `/.netlify/functions/api/profile` crashes when processing GIF uploads. This indicates an issue with `multipart/form-data` parsing, or a failure to correctly upload the GIF to an external image storage service, or a large file size issue.
+
+  * **Required Actions for AI to Pinpoint and Fix:**
+
+    1.  **Examine `netlify/functions/api.ts` (or `api/profile.ts` if separate):**
+
+          * **Locate `PUT` handler for `/api/profile`:** Find the section of code that responds to `PUT` requests for the `/profile` endpoint.
+          * **Identify Body Parsing for `multipart/form-data`:** For GIF uploads, the `event.body` will contain binary `multipart/form-data`. Directly parsing it as JSON (`JSON.parse(event.body)`) will fail. **Ensure a library like `formidable` or `busboy` is correctly used to parse `event.body` when `Content-Type` is `multipart/form-data`.** If not present, add it and implement parsing.
+          * **Identify Image Storage Logic:** Find where the parsed image data (the GIF) is being sent for storage. This *must* be an external service (e.g., Cloudinary, AWS S3, etc.). GIFs should not be stored directly in MongoDB.
+          * **Verify Storage Service Client Initialization:** Check if the client for the external storage service (e.g., `cloudinary.v2`, `new S3Client(...)`) is correctly imported and initialized. Ensure any `storage` variable used is properly defined and assigned.
+
+    2.  **Implement Detailed Logging within the `PUT /api/profile` handler:**
+
+          * **Add `console.log` statements at these critical points:**
+            ```typescript
+            console.log("Received PUT request to /api/profile for GIF upload.");
+            console.log("Event body length:", event.body?.length, "bytes.");
+            console.log("Event headers:", JSON.stringify(event.headers, null, 2)); // Stringify for full view
+            console.log("Is Base64 encoded?", event.isBase64Encoded);
+
+            // --- Body Parsing Debug ---
+            try {
+                console.log("Attempting to parse request body as multipart/form-data...");
+                // Assume 'parsedFormData' is the result from your multipart parser (e.g., formidable)
+                // Log specific details from the parsed form data
+                if (parsedFormData && typeof parsedFormData === 'object') {
+                    console.log("Parsed Form Data Fields:", Object.keys(parsedFormData.fields || {}));
+                    console.log("Parsed Form Data Files:", Object.keys(parsedFormData.files || {}));
+                    // If files are present, log file details (name, size, type)
+                    const uploadedFile = parsedFormData.files?.backgroundImage || parsedFormData.files?.profilePicture; // Adjust key as needed
+                    if (uploadedFile) {
+                        console.log("Uploaded File Name:", uploadedFile.originalFilename);
+                        console.log("Uploaded File Size:", uploadedFile.size);
+                        console.log("Uploaded File Mime Type:", uploadedFile.mimetype);
+                        // Do NOT log the file content itself unless very small, it will flood logs.
+                    }
+                } else {
+                    console.log("Body parsing result not as expected:", parsedFormData);
+                }
+            } catch (e: any) {
+                console.error("CRITICAL: Error during multipart/form-data parsing:", e.message, e.stack);
+                // Return an error response here if parsing fails
+                return { statusCode: 400, body: JSON.stringify({ error: "Failed to parse image data." }) };
+            }
+
+            // --- External Storage Upload Debug ---
+            try {
+                console.log("Attempting to upload file to external storage service...");
+                // Assuming 'uploadResponse' is the result from your external storage service API call
+                console.log("Storage Service API Call Target (URL/Endpoint):", targetStorageServiceUrl); // Replace with actual variable
+                console.log("Storage Service Response Status:", uploadResponse.statusCode || uploadResponse.status); // Adjust based on library
+                const storageResponseBody = await uploadResponse.text(); // Or uploadResponse.json()
+                console.log("Storage Service Raw Response Body:", storageResponseBody.substring(0, 500)); // Log part of it
+            } catch (e: any) {
+                console.error("CRITICAL: Image upload to storage service failed:", e.message, e.stack);
+                // Return an error response here
+                return { statusCode: 500, body: JSON.stringify({ error: "Failed to upload image to storage service." }) };
+            }
+            ```
+
+    3.  **Cross-Reference Netlify Environment Variables:**
+
+          * **Verify that ALL API keys/secrets for the external image storage service are correctly set in Netlify's Environment Variables.** (e.g., `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` if using Cloudinary).
+          * **Ensure these values are an *exact match* to your development environment.**
+
+-----
+
+**Problem 2: Spotify "Nothing Playing" (SyntaxError on Live Site)**
+
+  * **Symptoms:** Live site shows "Spotify Nothing playing". Browser console logs `Spotify API returned non-JSON response` and `SyntaxError: Unexpected token '<'`. Netlify Function logs show Spotify API client initialization, but no successful API call or a specific error message besides initialization.
+
+  * **Diagnosis:** The Netlify Function for Spotify is likely receiving an HTML error page (e.g., 401 Unauthorized, or a redirect HTML) from Spotify's API or an intermediary, instead of valid JSON. This is almost certainly due to an expired `SPOTIFY_REFRESH_TOKEN` or a mismatch in other Spotify credentials/redirect URIs on the live Netlify environment.
+
+  * **Required Actions for AI to Pinpoint and Fix:**
+
+    1.  **Examine `server/spotify.ts` (or the relevant Spotify Netlify Function file):**
+
+          * **Locate all Spotify API Call(s):** Find where HTTP requests are made to Spotify's API (e.g., to get the currently playing track, or to refresh the access token).
+          * **Locate Token Refresh Logic:** If a refresh token flow is implemented, ensure it properly handles token expiration and uses the `SPOTIFY_REFRESH_TOKEN` to obtain a new `access_token`. This is the most common failure point.
+
+    2.  **Implement Detailed Logging within the Spotify function (e.g., `server/spotify.ts`):**
+
+          * **Add `console.log` statements at these critical points around the Spotify API `fetch` or HTTP request:**
+            ```typescript
+            // Inside your Spotify Netlify Function (e.g., server/spotify.ts)
+
+            // ... (existing setup for Spotify API client, and logic to get accessToken) ...
+
+            try {
+                const spotifyApiUrl = 'YOUR_SPOTIFY_ENDPOINT_URL_HERE'; // The actual Spotify API endpoint being called
+                const accessToken = 'YOUR_SPOTIFY_ACCESS_TOKEN_VARIABLE_HERE'; // The current access token being used
+
+                console.log("[Spotify Function] Attempting API call to:", spotifyApiUrl);
+                console.log("[Spotify Function] Authorization Header Status: Bearer " + (accessToken ? "SET" : "NOT SET"));
+
+                const spotifyResponse = await fetch(spotifyApiUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json', // Ensure this header is sent
+                    },
+                });
+
+                console.log("[Spotify Function] Spotify API Response Status:", spotifyResponse.status);
+                const rawResponseBody = await spotifyResponse.text();
+                console.log("[Spotify Function] Spotify API Raw Response Body (first 500 chars):", rawResponseBody.substring(0, 500)); // THIS IS CRITICAL
+
+                // The next line is where the SyntaxError will occur if rawResponseBody is HTML
+                const spotifyData = JSON.parse(rawResponseBody);
+
+                // ... (rest of your logic to process spotifyData and return it) ...
+
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify(spotifyData),
+                };
+
+            } catch (error: any) {
+                console.error("[Spotify Function] Error during Spotify API fetch or parsing:", error.message, error.stack);
+                return {
+                    statusCode: 500, // Or appropriate error status, e.g., 401 if unauthorized
+                    body: JSON.stringify({ error: 'Failed to retrieve Spotify data', details: error.message }),
+                };
+            }
+            ```
+
+    3.  **Verify Netlify Environment Variables (Crucial Final Check):**
+
+          * **Generate a brand NEW `SPOTIFY_REFRESH_TOKEN` from your *working development environment* (Replit) by re-authorizing your Spotify app.** This is often the primary fix for this specific problem.
+          * Go to **Netlify Dashboard -\> Your Site -\> Site settings -\> Build & deploy -\> Environment variables.**
+          * **EDIT `SPOTIFY_REFRESH_TOKEN` and paste the *new, fresh token*.**
+          * **Confirm `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, and `SPOTIFY_REDIRECT_URI` are an *exact, character-for-character match* to what's in your Spotify Developer Dashboard AND your working Replit environment.** Pay attention to casing, extra spaces, and especially trailing slashes for the Redirect URI.
+
+-----
+
+**Problem 3: Discord Bot `Opening handshake has timed out`**
+
+  * **Symptoms:** `d1929f07 ERROR Failed to initialize Discord bot: Error: Opening handshake has timed out`. This indicates an issue with the Discord bot client establishing a WebSocket connection. However, later logs show `Discord bot logged in as site#0919`, suggesting it might be intermittent or a different function invocation.
+
+  * **Diagnosis:** The bot is failing to connect to Discord's WebSocket gateway. This is typically a network issue, an incorrect `DISCORD_BOT_TOKEN`, or a problem with Discord's servers or rate limits.
+
+  * **Required Actions for AI to Pinpoint and Fix:**
+
+    1.  **Examine Discord Bot Initialization Code:**
+
+          * Locate where the Discord client is initialized and attempts to log in (`client.login(process.env.DISCORD_BOT_TOKEN)`).
+          * Look for any explicit WebSocket configuration or timeout settings.
+
+    2.  **Implement Logging for Discord Bot Initialization:**
+
+          * **Add `console.log` statements around the Discord bot login attempt:**
+            ```typescript
+            console.log("[Discord Function] Attempting Discord bot login...");
+            try {
+                await discordClient.login(process.env.DISCORD_BOT_TOKEN);
+                console.log("[Discord Function] Discord bot logged in successfully!");
+            } catch (e: any) {
+                console.error("[Discord Function] CRITICAL: Discord bot login failed:", e.message, e.stack);
+            }
+            ```
+
+    3.  **Verify Netlify Environment Variables:**
+
+          * **Double-check `DISCORD_BOT_TOKEN` in Netlify's Environment Variables.** Ensure it's the correct token for your bot and has the necessary Discord permissions. A common issue is a wrong or revoked token.
+          * Confirm `DISCORD_CLIENT_ID` is also correct.
+
+    4.  **Consider Discord Gateway Status:** This is less likely if it works in dev, but check [https://discordstatus.com/](https://discordstatus.com/) for any ongoing Discord API issues if the problem persists after verifying credentials.
+
+-----
+
+**Final AI Action Plan:**
+
+1.  **Implement ALL specified code changes, especially the detailed `console.log` statements within the relevant Netlify Functions (`api/profile` for `PUT`, Spotify function, Discord functions).**
+2.  **Commit and push the code changes to the GitHub repository** connected to Netlify.
+3.  **Ensure ALL environment variables in the Netlify Dashboard are absolutely correct and up-to-date, particularly for Spotify (`SPOTIFY_REFRESH_TOKEN`, `CLIENT_ID`, `CLIENT_SECRET`, `REDIRECT_URI`) and Discord (`DISCORD_BOT_TOKEN`).**
+4.  **Trigger a new Netlify deployment.**
+5.  **Once deployed, immediately visit your live site (`https://renegaderaider.wtf`).**
+      * Attempt to upload a GIF.
+      * Wait for the Spotify section to try to load.
+      * Observe Discord integration.
+6.  **Go to Netlify Dashboard -\> Your Site -\> Functions.**
+7.  **Check the logs for `api/profile` (specifically the PUT method), your Spotify-related function, and Discord-related functions.** The new, detailed logs will provide the precise information needed to diagnose and resolve the exact points of failure.
