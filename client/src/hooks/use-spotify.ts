@@ -36,16 +36,20 @@ export function useSpotifyCurrentTrack() {
     queryFn: async (): Promise<SpotifyCurrentlyPlaying | null> => {
       const response = await fetch('/api/spotify/current');
       if (!response.ok) {
-        throw new Error('Failed to fetch current track');
+        // Don't throw error, return null to show "nothing playing" state
+        console.log('Spotify API response not ok:', response.status);
+        return null;
       }
-      return response.json();
+      const data = await response.json();
+      console.log('Spotify API response:', data);
+      return data;
     },
     refetchInterval: 5000, // Refetch every 5 seconds
     refetchOnWindowFocus: true,
-    retry: 3, // Retry more times
-    retryDelay: 1000, // Wait 1 second between retries
-    staleTime: 3000, // Consider data stale after 3 seconds
-    gcTime: 30000, // Keep cached data for 30 seconds
+    retry: 2, // Retry twice
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
+    staleTime: 1000, // Consider data stale after 1 second
+    gcTime: 10000, // Keep cached data for 10 seconds
   });
 
   // Smooth progress interpolation
