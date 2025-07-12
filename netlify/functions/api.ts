@@ -34,8 +34,22 @@ export const handler: Handler = async (event, context) => {
       apiPath = path.replace('/api', '');
     }
     
-    console.log('Function called with path:', path, 'parsed as:', apiPath);
-    const parsedBody = body ? JSON.parse(body) : {};
+    console.log('Function called with path:', path, 'parsed as:', apiPath, 'method:', httpMethod);
+    
+    let parsedBody = {};
+    if (body) {
+      try {
+        parsedBody = JSON.parse(body);
+        console.log('Parsed body successfully:', Object.keys(parsedBody));
+      } catch (parseError) {
+        console.error('Error parsing JSON body:', parseError);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Invalid JSON in request body' }),
+        };
+      }
+    }
 
     // Profile endpoints
     if (apiPath === "/profile") {
@@ -49,13 +63,28 @@ export const handler: Handler = async (event, context) => {
       }
       
       if (httpMethod === "PUT") {
-        const profileData = insertProfileSchema.parse(parsedBody);
-        const profile = await storage.updateProfile(profileData);
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify(profile),
-        };
+        try {
+          console.log('Attempting to update profile with data:', Object.keys(parsedBody));
+          const profileData = insertProfileSchema.parse(parsedBody);
+          console.log('Profile data validated successfully');
+          const profile = await storage.updateProfile(profileData);
+          console.log('Profile updated successfully:', profile.id);
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify(profile),
+          };
+        } catch (updateError) {
+          console.error('Error updating profile:', updateError);
+          return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ 
+              error: 'Failed to update profile', 
+              details: updateError instanceof Error ? updateError.message : String(updateError) 
+            }),
+          };
+        }
       }
     }
 
@@ -248,10 +277,17 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
+    console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+    console.error("Request details:", { path, httpMethod, bodyLength: body?.length || 0 });
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ message: "Internal server error" }),
+      body: JSON.stringify({ 
+        error: "Internal server error", 
+        details: error instanceof Error ? error.message : String(error),
+        path,
+        method: httpMethod 
+      }),
     };
   }
 };

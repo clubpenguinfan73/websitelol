@@ -281,5 +281,20 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use environment variable to determine storage type
-export const storage = new DatabaseStorage();
+// Use database storage if DATABASE_URL is provided, otherwise use memory storage
+let storage: IStorage;
+try {
+  if (process.env.DATABASE_URL) {
+    console.log('Using database storage');
+    storage = new DatabaseStorage();
+  } else {
+    console.log('Using memory storage - DATABASE_URL not found');
+    storage = new MemStorage();
+  }
+} catch (error) {
+  console.error('Error initializing storage:', error);
+  console.log('Falling back to memory storage');
+  storage = new MemStorage();
+}
+
+export { storage };

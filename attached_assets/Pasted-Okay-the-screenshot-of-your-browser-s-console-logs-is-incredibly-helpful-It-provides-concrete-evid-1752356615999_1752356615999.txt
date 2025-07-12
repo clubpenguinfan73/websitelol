@@ -1,0 +1,71 @@
+Okay, the screenshot of your browser's console logs is incredibly helpful! It provides concrete evidence of what's going wrong.
+
+Let's break down the key issues revealed in your console:
+
+### 1. **`SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON`**
+
+This error appears multiple times, related to both "Spotify API error" and possibly other data fetches.
+
+* **What it means:** Your client-side JavaScript is expecting to receive JSON data from an API endpoint, but instead, it's receiving HTML content (indicated by `<!DOCTYPE`). This typically happens when:
+    * **The API endpoint is not found (404 Not Found) and your server is returning an HTML error page.**
+    * **The server encountered an error (500 Internal Server Error) and returned an HTML error page.**
+    * **The API request was misconfigured, leading to a redirect to an HTML page.**
+* **Likely Causes for Spotify:**
+    * Your backend service that proxies Spotify API calls or handles token refreshing is failing. It's probably returning an HTML error page instead of JSON.
+    * Your Spotify API calls are hitting a server route that doesn't exist or is misconfigured, especially after some time (when tokens expire and refresh logic kicks in).
+    * Your `client_id`, `client_secret`, or redirect URIs are incorrect on the server-side, causing authentication failures.
+
+### 2. **`POST https://renegaderaider.wtf/.netlify/functions/api/profile 500 (Internal Server Error)`**
+
+This is the **most critical error** for your GIF upload/PFP/background issues.
+
+* **What it means:** When you try to upload a profile picture or background (which seems to trigger a POST request to `/api/profile`), your server-side function (presumably a Netlify Function based on the `.netlify/functions` path) is encountering an unhandled error and returning a `500 Internal Server Error` status code.
+* **Likely Causes:**
+    * **Server-side code error:** A bug in your Netlify Function (e.g., trying to access a variable that doesn't exist, a logic error, an unhandled exception).
+    * **File processing error:** The function might be failing when trying to read the uploaded GIF, validate it, or save it. This could be due to:
+        * Incorrect parsing of the `multipart/form-data` request.
+        * Issues with the image processing library (if you're using one on the server).
+        * Permissions issues when trying to write the file to storage.
+        * **Environment variables missing/incorrect:** Your Netlify Function might rely on API keys or configuration variables that aren't correctly set up in your Netlify environment.
+    * **Storage issues:** If your function tries to save the GIF to a database, cloud storage (S3, Cloudinary), or a specific directory, there might be an issue with authentication, permissions, or the storage service itself.
+    * **Timeouts:** If the function takes too long to process the upload, it might hit a timeout limit for Netlify Functions.
+
+### 3. **Successful File Loads (but then 500 error):**
+
+You see lines like "Profile file accepted..." and "File loaded successfully for profile...". This indicates that the **client-side JavaScript is correctly reading the file and forming the `data:image/gif` URL**. The problem is happening *after* this, when the client tries to send this data to your server.
+
+### Summary of Diagnosis:
+
+* **Spotify Issue:** Your backend server or Netlify Function responsible for handling Spotify API calls (especially token refreshing) is likely crashing or misconfigured, returning HTML error pages instead of JSON. This is causing your client-side application to display "Nothing playing" because it can't parse the expected JSON.
+* **GIF (PFP/Background) Issue:** Your Netlify Function at `/.netlify/functions/api/profile` that processes profile picture and background uploads is failing with a `500 Internal Server Error`. This means the client-side sends the data, but the server-side code crashes before it can successfully process and store the image.
+
+### Next Steps to Debug and Fix:
+
+#### **For the Spotify Issue (Focus on the Backend/Netlify Function):**
+
+1.  **Check Backend Logs:** This is paramount. If your Spotify logic runs on a backend server or in a Netlify Function, you need to access those logs.
+    * **Netlify:** Go to your Netlify dashboard, navigate to your site, then to "Functions." Look for logs related to the function that handles your Spotify API proxying/token refreshing.
+    * **Other Hosting:** Access your server's application logs (e.g., PM2 logs, Docker logs, cloud platform logs like AWS CloudWatch, Google Cloud Logging, etc.).
+    * **Look for:** Error messages, stack traces, "SyntaxError," "TypeError," "ReferenceError," or messages indicating failed API calls to Spotify.
+
+2.  **Verify Spotify API Credentials:** Double-check your `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, and `SPOTIFY_REDIRECT_URI` environment variables **on your Netlify deployment or server**. Even a small typo or misconfiguration will lead to authentication failures with Spotify, which your backend might then incorrectly handle and return HTML.
+
+3.  **Test Spotify Token Refresh Logic:** Manually try to trigger the token refresh process on your backend. Ensure it correctly exchanges the refresh token for a new access token and handles potential errors from Spotify's authentication service.
+
+#### **For the GIF Upload Issue (Focus on the Netlify Function `api/profile`):**
+
+1.  **Examine Netlify Function Code:** Open the code for your `/.netlify/functions/api/profile` function.
+    * **Input Parsing:** How are you parsing the incoming request body? For file uploads, you usually need to handle `multipart/form-data`. Libraries like `formidable` or `busboy` are common for Node.js. If you're directly accessing `event.body` in a Netlify Function without proper parsing, it will likely fail.
+    * **File Saving Logic:** How are you attempting to save the GIF?
+        * Are you writing it to a file system? Netlify Functions are stateless and ephemeral; you cannot reliably save files to their local file system. You *must* upload them to a persistent storage service (e.g., AWS S3, Cloudinary, Google Cloud Storage, MongoDB GridFS, etc.).
+        * If you're uploading to a cloud storage service, check:
+            * Are the credentials (API keys, secret keys, bucket names) for that service correctly configured as environment variables in Netlify?
+            * Does the user/role associated with those credentials have permission to write to the specified bucket/folder?
+            * Is the code correctly calling the SDK methods for the storage service?
+    * **Error Handling:** Add `try...catch` blocks around all critical operations (parsing input, processing image, uploading to storage) within your function to log specific errors instead of a generic 500.
+
+2.  **Check Netlify Function Logs for `api/profile`:** Again, this is paramount. Go to your Netlify dashboard, site, then "Functions." Find the `api/profile` function and look at its invocation logs. This will show you the exact server-side error message and stack trace that's causing the 500.
+
+3.  **Simulate Upload (Postman/Insomnia):** If possible, try to send a `multipart/form-data` POST request to `https://renegaderaider.wtf/.netlify/functions/api/profile` using a tool like Postman or Insomnia. This can help isolate whether the issue is with your client-side form submission or purely the server-side handling.
+
+**Prioritize looking at the server-side logs for both issues. They will give you the precise stack trace and error message that is causing the 500 errors.**
