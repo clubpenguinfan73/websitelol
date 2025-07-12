@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>renegade raider.wtf</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+        color: white;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .container {
+        text-align: center;
+        max-width: 400px;
+        padding: 2rem;
+      }
+      
+      .gradient-text {
+        background: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      
+      .bio {
+        opacity: 0.8;
+        margin-bottom: 2rem;
+      }
+      
+      .link-item {
+        display: block;
+        padding: 0.75rem 1.5rem;
+        margin: 0.5rem 0;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid transparent;
+        border-radius: 12px;
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+      
+      .link-item:hover {
+        transform: translateY(-2px);
+        border-color: #8B5CF6;
+        box-shadow: 0 10px 25px rgba(139, 92, 246, 0.3);
+      }
+      
+      .admin-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: rgba(139, 92, 246, 0.8);
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        color: white;
+        cursor: pointer;
+        font-size: 20px;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+      
+      .admin-button:hover {
+        background: rgba(139, 92, 246, 1);
+        transform: scale(1.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="gradient-text">renegade raider</h1>
+      <p class="bio">Professional gamer • Content creator • Streaming daily</p>
+      
+      <div id="links-container">
+        <a href="#" class="link-item">🎮 Twitch</a>
+        <a href="#" class="link-item">📺 YouTube</a>
+        <a href="#" class="link-item">🐦 Twitter</a>
+        <a href="#" class="link-item">💬 Discord</a>
+        <a href="#" class="link-item">🎵 Spotify</a>
+      </div>
+    </div>
+    
+    <button class="admin-button" onclick="toggleAdmin()">⚙️</button>
+    
+    <script>
+      // Load actual data from API
+      async function loadContent() {
+        try {
+          const profileResponse = await fetch('/.netlify/functions/api/profile');
+          const profile = await profileResponse.json();
+          
+          const linksResponse = await fetch('/.netlify/functions/api/links');
+          const links = await linksResponse.json();
+          
+          // Update profile
+          document.querySelector('.gradient-text').textContent = profile.username || 'renegade raider';
+          document.querySelector('.bio').textContent = profile.bio || 'Professional gamer • Content creator • Streaming daily';
+          
+          // Update links
+          let linksHTML = '';
+          links.forEach(link => {
+            linksHTML += `<a href="${link.url}" class="link-item" target="_blank">${link.title}</a>`;
+          });
+          document.getElementById('links-container').innerHTML = linksHTML;
+          
+          console.log('Content loaded successfully!');
+        } catch (error) {
+          console.log('Using fallback content:', error);
+          // Fallback content is already in the HTML
+        }
+      }
+      
+      function toggleAdmin() {
+        const username = prompt('Enter username:');
+        const password = prompt('Enter password:');
+        
+        if (username === 'Cat' && password === 'Cat@Renagde.wtf73') {
+          alert('Admin access granted! Full features will be available soon.');
+        } else {
+          alert('Invalid credentials');
+        }
+      }
+      
+      // Load content when page loads
+      window.addEventListener('load', loadContent);
+    </script>
+  </body>
+</html>

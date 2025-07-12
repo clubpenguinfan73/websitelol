@@ -1,0 +1,131 @@
+Thanks — this version of the `<body>` confirms what’s happening:
+
+---
+
+## ❗ Diagnosis: Your React App is **Not Rendering Anything** into `<div id="root">`
+
+Right now, your page has:
+
+```html
+<div id="root">
+  <div role="region" aria-label="Notifications (F8)" ...></div>
+</div>
+```
+
+But **there's no actual content** — no profile card, username, or overlay — meaning your React app **mounted nothing**.
+
+This typically happens when:
+
+---
+
+### 🚫 Common Causes of "Blank React Root"
+
+| Cause                                           | Symptoms                                              |
+| ----------------------------------------------- | ----------------------------------------------------- |
+| ❌ `main.tsx` or `index.tsx` has an error        | App won’t mount anything                              |
+| ❌ A required component (like `<App />`) fails   | Blank screen, no DOM updates                          |
+| ❌ Build output not present in Netlify           | JS fails to load                                      |
+| ❌ React root mount code is missing or broken    | `ReactDOM.createRoot(...).render(...)` fails silently |
+| ❌ APIs throw errors at runtime and break layout | JavaScript crashes mid-render                         |
+
+---
+
+## ✅ Steps to Debug It Now
+
+### 1. **Open Chrome DevTools → Console**
+
+Look for any of these errors:
+
+```
+Uncaught ReferenceError
+Uncaught TypeError
+Module not found: ...
+SyntaxError: Unexpected token ...
+```
+
+These are **fatal runtime issues** that stop rendering.
+
+### 2. **Check Network Tab**
+
+Look for:
+
+* Red 404s for JS files like `/src/main.tsx`, `/dist/assets/index-xxx.js`
+* Missing `/index.html`, especially if built incorrectly
+
+---
+
+## ✅ How to Fix It (React + Vite Specific)
+
+If you're trying to deploy a **React + Vite app**, here’s what you MUST do:
+
+### 💡 In Your Local Project:
+
+```bash
+npm install
+npm run build
+```
+
+This creates a production-ready `dist/` folder.
+
+---
+
+### 📝 Create `netlify.toml`
+
+```toml
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[functions]
+  directory = "netlify/functions"
+```
+
+---
+
+### 📤 Push to GitHub (or use CLI):
+
+```bash
+git add .
+git commit -m "Deploy build"
+git push
+```
+
+Let Netlify automatically build and deploy.
+
+---
+
+## ✅ Confirm After Deploy
+
+After deployment, you should have:
+
+```
+dist/
+├── index.html       ✅
+├── assets/
+│   └── index-abc.js ✅ compiled JS bundle
+```
+
+And your browser should see DOM like:
+
+```html
+<div id="root">
+  <div class="container">...</div>  ← React content is rendered
+</div>
+```
+
+---
+
+## 🛠 TL;DR Fix Path
+
+* If you're deploying a React/Vite site: **you must build it with `npm run build` and deploy the `/dist` folder**
+* Right now, nothing is mounting because either:
+
+  * The app errors on load
+  * The Vite entrypoint (`main.tsx`) isn't being executed
+  * You're not building it before deploying
+
+---
+
+Would you like help running the build and pushing it to Netlify or GitHub? I can even generate a Netlify-ready `dist` ZIP for you if you send the repo.
+
+Let me know how you want to proceed — static fallback or full React build.

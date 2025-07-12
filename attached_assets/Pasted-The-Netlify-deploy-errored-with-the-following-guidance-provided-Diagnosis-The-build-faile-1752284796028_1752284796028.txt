@@ -1,0 +1,80 @@
+The Netlify deploy errored, with the following guidance provided:
+
+**Diagnosis:**
+The build failed due to a user error at [line 71](#L71) where the build script tried to list the contents of a directory `dist/functions/` that does not exist.
+
+**Solution:**
+To resolve this issue:
+1. Verify that the `dist/functions/` directory exists in your project. If it doesn't, create it or ensure it's being generated during the build process.
+2. Update the build script to ensure it's correctly referencing the existing directories before attempting to list their contents.
+
+After verifying the existence of the directory and updating the build script, trigger a new build to confirm the issue has been resolved.
+
+The relevant error logs are:
+
+Line 0: build-image version: 068c1c7d7725d329cc382184c7bbf62ac27e2c09 (noble)
+Line 1: buildbot version: 1ad41682c3cb8ba50e6cec4a3cd94c50f999b538
+Line 2: Fetching cached dependencies
+Line 3: Failed to fetch cache, continuing with build
+Line 4: Starting to prepare the repo for build
+Line 5: No cached dependencies found. Cloning fresh repo
+Line 6: git clone --filter=blob:none https://github.com/clubpenguinfan73/renegaderaider-wtf1
+Line 7: Preparing Git Reference refs/heads/main
+Line 8: Starting to install dependencies
+Line 9: Using PHP version
+Line 10: Downloading and installing node v20.12.2...
+Line 11: Downloading https://nodejs.org/dist/v20.12.2/node-v20.12.2-linux-x64.tar.xz...
+Line 12: Computing checksum with sha256sum
+Line 13: Checksums matched!
+Line 63: [36m[1m❯ Loading extensions[22m[39m
+Line 64:    - neon
+Line 65: [96m[1m​[22m[39m
+Line 66: [96m[1mbuild.command from netlify.toml                               [22m[39m
+Line 67: [96m[1m────────────────────────────────────────────────────────────────[22m[39m
+Line 68: ​
+Line 69: [36m$ echo 'Building with functions' && ls -la dist/functions/ && ls -la dist/public/[39m
+Line 70: Building with functions
+Line 71: ls: cannot access 'dist/functions/': No such file or directory
+Line 72: [91m[1m​[22m[39m
+Line 73: [91m[1m"build.command" failed                                        [22m[39m
+Line 74: [91m[1m────────────────────────────────────────────────────────────────[22m[39m
+Line 75: ​
+Line 76:   [31m[1mError message[22m[39m
+Line 77:   Command failed with exit code 2: echo 'Building with functions' && ls -la dist/functions/ && ls -la dist/public/
+Line 78: ​
+Line 79:   [31m[1mError location[22m[39m
+Line 80:   In build.command from netlify.toml:
+Line 81:   echo 'Building with functions' && ls -la dist/functions/ && ls -la dist/public/
+Line 82: ​
+Line 83:   [31m[1mResolved config[22m[39m
+Line 84:   build:
+Line 85:     command: echo 'Building with functions' && ls -la dist/functions/ && ls -la
+Line 86:       dist/public/
+Line 87:     commandOrigin: config
+Line 88: Failed during stage 'building site': Build script returned non-zero exit code: 2
+Line 89:     environment:
+Line 90:       - DISCORD_BOT_TOKEN
+Line 91:       - DISCORD_CLIENT_ID
+Line 92:       - DISCORD_CLIENT_SECRET
+Line 93:       - SESSION_SECRET
+Line 94:       - SPOTIFY_CLIENT_ID
+Line 95:       - SPOTIFY_CLIENT_SECRET
+Line 96:       - SPOTIFY_REFRESH_TOKEN
+Line 97:       - NODE_VERSION
+Line 98:     processing:
+Line 99:       skip_processing: false
+Line 100:     publish: /opt/build/repo/dist/public
+Line 101:     publishOrigin: config
+Line 102:   functions:
+Line 103:     "*":
+Line 104:       node_bundler: esbuild
+Line 105:   functionsDirectory: /opt/build/repo/dist/functions
+Line 106:   headers:
+Line 107:     - for: /*
+      values:
+        Referrer-Policy: strict-origin-when-cross-origin
+        X-Content-Type-Options: nosniff
+   
+Line 108: Build failed due to a user error: Build script returned non-zero exit code: 2
+Line 109: Failing build: Failed to build site
+Line 110: Finished processing build request in 1m37.681s

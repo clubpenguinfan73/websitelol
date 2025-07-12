@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>renegade raider</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 40px;
+            border-radius: 20px;
+            border: 2px solid #8B5CF6;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .username {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #8B5CF6 0%, #06B6D4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .bio {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #ccc;
+            line-height: 1.4;
+        }
+
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .link {
+            padding: 15px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: block;
+        }
+
+        .link:hover {
+            border-color: #8B5CF6;
+            background: #2a2a2a;
+            transform: translateY(-2px);
+        }
+
+        .status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10B981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .status.error { background: #EF4444; }
+        .status.warning { background: #F59E0B; }
+        .loading { opacity: 0.7; }
+
+        .debug-info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            display: none;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .username {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status" id="status">Initializing...</div>
+    <div class="debug-info" id="debug"></div>
+    
+    <div class="container">
+        <h1 class="username" id="username">renegade raider</h1>
+        <p class="bio" id="bio">Professional gamer • Content creator • Streaming daily</p>
+        <div class="links" id="links">
+            <a href="#" class="link">Twitch - Coming Soon</a>
+            <a href="#" class="link">YouTube - Coming Soon</a>
+            <a href="#" class="link">Twitter - Coming Soon</a>
+            <a href="#" class="link">Discord - Coming Soon</a>
+            <a href="#" class="link">Spotify - Coming Soon</a>
+            <a href="#" class="link">Last.fm - Coming Soon</a>
+        </div>
+    </div>
+
+    <script>
+        const status = document.getElementById('status');
+        const debug = document.getElementById('debug');
+        let debugInfo = [];
+
+        function addDebug(message) {
+            debugInfo.push(new Date().toLocaleTimeString() + ': ' + message);
+            debug.innerHTML = debugInfo.slice(-5).join('<br>');
+            console.log(message);
+        }
+
+        function updateStatus(message, type = 'success') {
+            status.textContent = message;
+            status.className = `status ${type}`;
+            addDebug(`Status: ${message}`);
+        }
+
+        // Show debug info on double-click
+        document.addEventListener('dblclick', function() {
+            debug.style.display = debug.style.display === 'none' ? 'block' : 'none';
+        });
+
+        async function fetchWithDebug(url, description) {
+            try {
+                addDebug(`Fetching ${description} from ${url}`);
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+
+                addDebug(`Response status: ${response.status} ${response.statusText}`);
+                addDebug(`Response headers: ${response.headers.get('content-type')}`);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const text = await response.text();
+                addDebug(`Response text length: ${text.length}`);
+                addDebug(`Response preview: ${text.substring(0, 100)}...`);
+
+                try {
+                    const data = JSON.parse(text);
+                    addDebug(`JSON parsed successfully`);
+                    return data;
+                } catch (parseError) {
+                    addDebug(`JSON parse failed: ${parseError.message}`);
+                    throw new Error(`Invalid JSON response: ${parseError.message}`);
+                }
+
+            } catch (error) {
+                addDebug(`Fetch failed: ${error.message}`);
+                throw error;
+            }
+        }
+
+        async function loadProfile() {
+            try {
+                updateStatus('Loading profile...', 'warning');
+                const profile = await fetchWithDebug('/.netlify/functions/api/profile', 'profile');
+                
+                if (profile && profile.username) {
+                    document.getElementById('username').textContent = profile.username;
+                    addDebug(`Username set to: ${profile.username}`);
+                }
+                
+                if (profile && profile.bio) {
+                    document.getElementById('bio').textContent = profile.bio;
+                    addDebug(`Bio set to: ${profile.bio}`);
+                }
+
+                return true;
+            } catch (error) {
+                addDebug(`Profile load failed: ${error.message}`);
+                updateStatus('Profile: Using defaults', 'warning');
+                return false;
+            }
+        }
+
+        async function loadLinks() {
+            try {
+                updateStatus('Loading links...', 'warning');
+                const links = await fetchWithDebug('/.netlify/functions/api/links', 'links');
+                
+                const linksContainer = document.getElementById('links');
+                
+                if (links && Array.isArray(links) && links.length > 0) {
+                    linksContainer.innerHTML = '';
+                    
+                    links.forEach(link => {
+                        const linkEl = document.createElement('a');
+                        linkEl.href = link.url || '#';
+                        linkEl.className = 'link';
+                        linkEl.textContent = link.title || 'Untitled Link';
+                        linkEl.target = '_blank';
+                        linkEl.rel = 'noopener noreferrer';
+                        linksContainer.appendChild(linkEl);
+                    });
+                    
+                    addDebug(`Loaded ${links.length} links successfully`);
+                    return true;
+                } else {
+                    addDebug('No links found in response');
+                    updateStatus('Links: Using defaults', 'warning');
+                    return false;
+                }
+                
+            } catch (error) {
+                addDebug(`Links load failed: ${error.message}`);
+                updateStatus('Links: Using defaults', 'warning');
+                return false;
+            }
+        }
+
+        async function initializeSite() {
+            try {
+                addDebug('Site initialization started');
+                updateStatus('Connecting to APIs...', 'warning');
+                
+                const [profileLoaded, linksLoaded] = await Promise.all([
+                    loadProfile(),
+                    loadLinks()
+                ]);
+                
+                if (profileLoaded && linksLoaded) {
+                    updateStatus('Site loaded successfully!', 'success');
+                } else if (profileLoaded || linksLoaded) {
+                    updateStatus('Partially loaded', 'warning');
+                } else {
+                    updateStatus('Using default content', 'error');
+                }
+                
+                addDebug('Site initialization completed');
+                
+            } catch (error) {
+                addDebug(`Site initialization failed: ${error.message}`);
+                updateStatus('Site ready with defaults', 'error');
+            }
+        }
+
+        // Initialize when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeSite);
+        } else {
+            initializeSite();
+        }
+
+        // Handle global errors
+        window.addEventListener('error', function(e) {
+            addDebug(`Global error: ${e.error?.message || e.message}`);
+            updateStatus('Script error occurred', 'error');
+        });
+
+        // Show initial instructions
+        setTimeout(() => {
+            if (status.textContent.includes('default')) {
+                addDebug('Double-click anywhere to show debug info');
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

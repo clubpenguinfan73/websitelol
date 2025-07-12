@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Profile Effects</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(30, 30, 30, 0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #8B5CF6;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-size: 2.5rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #333;
+            padding-bottom: 1rem;
+        }
+        
+        .tab {
+            padding: 1rem 1.5rem;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: #8B5CF6;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 2rem;
+            background: #2a2a2a;
+            border-radius: 12px;
+            border: 2px solid #333;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #ccc;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: 2px solid #333;
+            background: #1a1a1a;
+            color: white;
+            font-size: 1rem;
+        }
+        
+        .preview-box {
+            background: #1a1a1a;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            border: 2px solid #333;
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .save-btn {
+            width: 100%;
+            background: #8B5CF6;
+            color: white;
+            border: none;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: background 0.3s ease;
+        }
+        
+        .save-btn:hover {
+            background: #7C3AED;
+        }
+        
+        /* Profile Effects Animations */
+        @keyframes snowfall {
+            0% { transform: translateY(-100vh); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+        
+        @keyframes rainfall {
+            0% { transform: translateY(-100vh); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+        
+        @keyframes heartfloat {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            50% { opacity: 0.7; }
+            100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+        }
+        
+        @keyframes confettifall {
+            0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        
+        .effect-preview {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        
+        .effect-item {
+            position: absolute;
+            animation-fill-mode: both;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <h1>🎨 Profile Effects Admin Panel</h1>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('username')">🎭 Username Effects</button>
+            <button class="tab" onclick="showTab('profile')">🎨 Profile Effects</button>
+            <button class="tab" onclick="showTab('links')">🔗 Manage Links</button>
+        </div>
+        
+        <!-- Username Effects Tab -->
+        <div id="username" class="tab-content active">
+            <h3 style="color: #8B5CF6; margin-bottom: 1rem;">🎭 Username Effects</h3>
+            <div class="form-group">
+                <label for="usernameEffect">Effect Style</label>
+                <select id="usernameEffect" onchange="updateUsernamePreview()">
+                    <option value="none">None</option>
+                    <option value="rainbow">Rainbow</option>
+                    <option value="glow">Glow</option>
+                    <option value="neon">Neon</option>
+                    <option value="fire">Fire</option>
+                    <option value="ice">Ice</option>
+                    <option value="wave">Wave</option>
+                    <option value="pulse">Pulse</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Preview</label>
+                <div class="preview-box">
+                    <span id="usernamePreview" style="font-size: 1.5rem; font-weight: 600;">Preview Username</span>
+                </div>
+            </div>
+            <button class="save-btn" onclick="saveUsernameEffect()">Apply Username Effect</button>
+        </div>
+        
+        <!-- Profile Effects Tab -->
+        <div id="profile" class="tab-content">
+            <h3 style="color: #8B5CF6; margin-bottom: 1rem;">🎨 Profile Effects</h3>
+            <div class="form-group">
+                <label for="profileEffect">Effect Style</label>
+                <select id="profileEffect" onchange="updateProfilePreview()">
+                    <option value="none">None</option>
+                    <option value="snow">❄️ Snowing Winter</option>
+                    <option value="rain">🌧️ Raining Summer</option>
+                    <option value="leaves">🍂 Autumn Leaves</option>
+                    <option value="confetti">🎊 Confetti Party</option>
+                    <option value="hearts">❤️ Floating Hearts</option>
+                    <option value="bubbles">🫧 Floating Bubbles</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Live Preview</label>
+                <div id="profilePreview" class="preview-box">
+                    <span style="font-size: 1.25rem; font-weight: 600; z-index: 1; position: relative;">Effect Preview</span>
+                </div>
+            </div>
+            <button class="save-btn" onclick="saveProfileEffect()">Apply Profile Effect</button>
+        </div>
+        
+        <!-- Links Tab -->
+        <div id="links" class="tab-content">
+            <h3 style="color: #8B5CF6; margin-bottom: 1rem;">🔗 Manage Links</h3>
+            <p style="color: #ccc;">Link management functionality coming soon...</p>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Hide all tab buttons
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Update previews if needed
+            if (tabName === 'profile') {
+                updateProfilePreview();
+            }
+        }
+        
+        function updateUsernamePreview() {
+            const select = document.getElementById('usernameEffect');
+            const preview = document.getElementById('usernamePreview');
+            const effect = select.value;
+            
+            preview.className = '';
+            if (effect !== 'none') {
+                preview.className = `username-${effect}`;
+                preview.style.cssText = getEffectStyles(effect);
+            }
+        }
+        
+        function updateProfilePreview() {
+            const select = document.getElementById('profileEffect');
+            const preview = document.getElementById('profilePreview');
+            const effect = select.value;
+            
+            // Clear previous effects
+            const existingEffects = preview.querySelectorAll('.effect-preview');
+            existingEffects.forEach(el => el.remove());
+            
+            if (effect === 'none') return;
+            
+            // Create effect preview
+            const effectDiv = document.createElement('div');
+            effectDiv.className = 'effect-preview';
+            
+            switch (effect) {
+                case 'snow':
+                    for (let i = 0; i < 15; i++) {
+                        const snowflake = document.createElement('div');
+                        snowflake.className = 'effect-item';
+                        snowflake.innerHTML = '❄️';
+                        snowflake.style.cssText = `
+                            left: ${Math.random() * 100}%;
+                            font-size: 12px;
+                            color: white;
+                            animation: snowfall ${2 + Math.random() * 2}s linear infinite;
+                            animation-delay: ${Math.random() * 2}s;
+                        `;
+                        effectDiv.appendChild(snowflake);
+                    }
+                    break;
+                    
+                case 'rain':
+                    for (let i = 0; i < 20; i++) {
+                        const raindrop = document.createElement('div');
+                        raindrop.className = 'effect-item';
+                        raindrop.style.cssText = `
+                            left: ${Math.random() * 100}%;
+                            width: 1px;
+                            height: 15px;
+                            background: linear-gradient(to bottom, rgba(100,149,237,0.8), rgba(100,149,237,0.2));
+                            animation: rainfall ${0.5 + Math.random() * 0.5}s linear infinite;
+                            animation-delay: ${Math.random() * 1}s;
+                        `;
+                        effectDiv.appendChild(raindrop);
+                    }
+                    break;
+                    
+                case 'hearts':
+                    for (let i = 0; i < 8; i++) {
+                        const heart = document.createElement('div');
+                        heart.className = 'effect-item';
+                        heart.innerHTML = '❤️';
+                        heart.style.cssText = `
+                            left: ${Math.random() * 100}%;
+                            font-size: 14px;
+                            animation: heartfloat ${3 + Math.random() * 2}s linear infinite;
+                            animation-delay: ${Math.random() * 3}s;
+                        `;
+                        effectDiv.appendChild(heart);
+                    }
+                    break;
+                    
+                case 'confetti':
+                    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3'];
+                    for (let i = 0; i < 12; i++) {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'effect-item';
+                        confetti.style.cssText = `
+                            left: ${Math.random() * 100}%;
+                            width: 6px;
+                            height: 6px;
+                            background: ${colors[i % colors.length]};
+                            animation: confettifall ${2 + Math.random() * 2}s linear infinite;
+                            animation-delay: ${Math.random() * 2}s;
+                        `;
+                        effectDiv.appendChild(confetti);
+                    }
+                    break;
+                    
+                case 'bubbles':
+                    for (let i = 0; i < 10; i++) {
+                        const bubble = document.createElement('div');
+                        bubble.className = 'effect-item';
+                        const size = 10 + Math.random() * 15;
+                        bubble.style.cssText = `
+                            left: ${Math.random() * 100}%;
+                            width: ${size}px;
+                            height: ${size}px;
+                            border-radius: 50%;
+                            background: rgba(255, 255, 255, 0.1);
+                            border: 1px solid rgba(255, 255, 255, 0.2);
+                            animation: heartfloat ${3 + Math.random() * 2}s linear infinite;
+                            animation-delay: ${Math.random() * 3}s;
+                        `;
+                        effectDiv.appendChild(bubble);
+                    }
+                    break;
+            }
+            
+            preview.appendChild(effectDiv);
+        }
+        
+        function getEffectStyles(effect) {
+            switch (effect) {
+                case 'rainbow':
+                    return `
+                        background: linear-gradient(45deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+                        background-size: 300% 300%;
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                        animation: rainbow 2s ease-in-out infinite;
+                    `;
+                case 'glow':
+                    return `
+                        color: #ffffff;
+                        text-shadow: 0 0 10px #8B5CF6, 0 0 20px #8B5CF6, 0 0 30px #8B5CF6;
+                        animation: glow 2s ease-in-out infinite alternate;
+                    `;
+                case 'neon':
+                    return `
+                        color: #00ff00;
+                        text-shadow: 0 0 5px #00ff00, 0 0 10px #00ff00, 0 0 15px #00ff00;
+                        animation: neon 1.5s ease-in-out infinite alternate;
+                    `;
+                case 'fire':
+                    return `
+                        background: linear-gradient(45deg, #ff4500, #ff6500, #ff8500, #ffa500);
+                        background-size: 400% 400%;
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                        animation: fire 1s ease-in-out infinite;
+                    `;
+                default:
+                    return '';
+            }
+        }
+        
+        function saveUsernameEffect() {
+            const effect = document.getElementById('usernameEffect').value;
+            alert(`Username effect "${effect}" saved! (This is a demo - integrate with your API)`);
+        }
+        
+        function saveProfileEffect() {
+            const effect = document.getElementById('profileEffect').value;
+            alert(`Profile effect "${effect}" saved! (This is a demo - integrate with your API)`);
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateUsernamePreview();
+            updateProfilePreview();
+        });
+    </script>
+</body>
+</html>

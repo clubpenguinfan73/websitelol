@@ -1,0 +1,101 @@
+Thank you for sharing the HTML file. After reviewing the code, here is a **summary of what needs to be fixed** to resolve the **blank black screen issue**:
+
+---
+
+### ✅ Summary of Problems & Fixes
+
+#### 1. **External API Calls Are Likely Failing**
+
+Your script makes two important fetch requests:
+
+```js
+fetch('/.netlify/functions/api/profile')
+fetch('/.netlify/functions/api/links')
+```
+
+If these fail or return invalid responses, your site may appear empty except for the loading message. This is **the most likely reason** you're seeing a blank screen.
+
+**Fix:**
+
+* Check the **Netlify Functions** at `/.netlify/functions/api/profile` and `.../links`. Are they:
+
+  * Deployed correctly?
+  * Returning valid JSON?
+  * Not throwing 404 or 500 errors?
+
+You can test this by:
+
+* Opening Developer Tools → Network tab → Reloading the page.
+* Looking for failed `fetch` requests (red status codes).
+* Opening the console for error messages (you might see `Profile loading failed:` or `Links loading failed:`).
+
+---
+
+#### 2. **No Fallback Content Rendered When Fetch Fails**
+
+When the profile/links fetch fails, you log an error and show "Using default profile", but **you don’t actually populate default values.**
+
+**Fix:**
+Update the catch block to actually inject fallback HTML:
+
+```js
+document.getElementById('bio').textContent = 'Gamer. Streamer. Legend.';
+document.getElementById('username').innerHTML = '<span class="char">r</span><span class="char">e</span>...';
+```
+
+---
+
+#### 3. **Netlify Routing / Functions Setup**
+
+Since you’re deploying on Netlify, confirm that:
+
+* You have a `netlify.toml` with proper configuration for functions, like:
+
+```toml
+[functions]
+  directory = "netlify/functions"
+```
+
+* The functions are correctly placed and named (`api/profile.js`, `api/links.js`)
+* They return responses like:
+
+```js
+return {
+  statusCode: 200,
+  body: JSON.stringify({ username: "renegade raider", bio: "..." })
+};
+```
+
+---
+
+#### 4. **Site Appears Visually Empty Until JavaScript Completes**
+
+Because your HTML relies on JavaScript for *all* visible content (username, bio, links), if JS is blocked, fails, or takes time, the page is just a styled black background.
+
+**Fix (optional but recommended):**
+Add some basic default HTML inside `#username`, `#bio`, and `#links-section` so the site has content *even without JS*.
+
+---
+
+### ✅ What You Should Do Right Now
+
+1. **Open Developer Tools (F12)**
+
+   * Look at the **Console** for JS errors.
+   * Look at the **Network tab** for failed requests (especially `/.netlify/functions/...`).
+2. **Fix or mock your Netlify Functions**
+
+   * If you haven’t created them yet, you must. These populate all dynamic content.
+3. **Temporarily hardcode some test data**
+
+   * In `loadProfile()` and `loadLinks()`, replace `fetch(...)` with hardcoded dummy data to see the site render.
+
+---
+
+Let me know if you want help:
+
+* Writing a mock Netlify function (`api/profile.js`)
+* Creating a fallback rendering system
+* Or reviewing the deployment settings
+
+This is a JS/API content-fetch issue — not a CSS or HTML structure problem.

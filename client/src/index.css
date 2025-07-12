@@ -1,0 +1,353 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bangers&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Creepster&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(0, 0%, 100%);
+  --foreground: hsl(20, 14.3%, 4.1%);
+  --muted: hsl(60, 4.8%, 95.9%);
+  --muted-foreground: hsl(25, 5.3%, 44.7%);
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(20, 14.3%, 4.1%);
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(20, 14.3%, 4.1%);
+  --border: hsl(20, 5.9%, 90%);
+  --input: hsl(20, 5.9%, 90%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(60, 4.8%, 95.9%);
+  --secondary-foreground: hsl(24, 9.8%, 10%);
+  --accent: hsl(60, 4.8%, 95.9%);
+  --accent-foreground: hsl(24, 9.8%, 10%);
+  --destructive: hsl(0, 84.2%, 60.2%);
+  --destructive-foreground: hsl(60, 9.1%, 97.8%);
+  --ring: hsl(20, 14.3%, 4.1%);
+  --radius: 0.5rem;
+  
+  /* Gaming theme colors */
+  --gaming-purple: hsl(253, 75%, 59%);
+  --gaming-cyan: hsl(186, 95%, 43%);
+  --dark-gray: hsl(0, 0%, 10%);
+  --medium-gray: hsl(0, 0%, 18%);
+  --light-gray: hsl(0, 0%, 25%);
+  
+
+}
+
+.dark {
+  --background: hsl(240, 10%, 3.9%);
+  --foreground: hsl(0, 0%, 98%);
+  --muted: hsl(240, 3.7%, 15.9%);
+  --muted-foreground: hsl(240, 5%, 64.9%);
+  --popover: hsl(240, 10%, 3.9%);
+  --popover-foreground: hsl(0, 0%, 98%);
+  --card: hsl(240, 10%, 3.9%);
+  --card-foreground: hsl(0, 0%, 98%);
+  --border: hsl(240, 3.7%, 15.9%);
+  --input: hsl(240, 3.7%, 15.9%);
+  --primary: hsl(207, 90%, 54%);
+  --primary-foreground: hsl(211, 100%, 99%);
+  --secondary: hsl(240, 3.7%, 15.9%);
+  --secondary-foreground: hsl(0, 0%, 98%);
+  --accent: hsl(240, 3.7%, 15.9%);
+  --accent-foreground: hsl(0, 0%, 98%);
+  --destructive: hsl(0, 62.8%, 30.6%);
+  --destructive-foreground: hsl(0, 0%, 98%);
+  --ring: hsl(240, 4.9%, 83.9%);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-black text-white;
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+@layer utilities {
+  .bg-gaming-purple {
+    background-color: var(--gaming-purple);
+  }
+  
+  .bg-gaming-cyan {
+    background-color: var(--gaming-cyan);
+  }
+  
+  .bg-dark-gray {
+    background-color: var(--dark-gray);
+  }
+  
+  .bg-medium-gray {
+    background-color: var(--medium-gray);
+  }
+  
+  .bg-light-gray {
+    background-color: var(--light-gray);
+  }
+  
+  .text-gaming-purple {
+    color: var(--gaming-purple);
+  }
+  
+  .text-gaming-cyan {
+    color: var(--gaming-cyan);
+  }
+  
+  .border-gaming-purple {
+    border-color: var(--gaming-purple);
+  }
+  
+  .border-gaming-cyan {
+    border-color: var(--gaming-cyan);
+  }
+  
+  .focus\:border-gaming-purple:focus {
+    border-color: var(--gaming-purple);
+  }
+  
+  .hover\:bg-gaming-purple\/80:hover {
+    background-color: hsl(253, 75%, 59%, 0.8);
+  }
+}
+
+/* Username Effects Animations */
+@keyframes rainbow {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes glow {
+  from { text-shadow: 0 0 10px #7c3aed, 0 0 20px #7c3aed, 0 0 40px #7c3aed; }
+  to { text-shadow: 0 0 15px #06b6d4, 0 0 25px #06b6d4, 0 0 45px #06b6d4; }
+}
+
+@keyframes neon {
+  from { text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #00ffff; }
+  to { text-shadow: 0 0 2px #00ffff, 0 0 5px #00ffff, 0 0 8px #00ffff, 0 0 12px #00ffff; }
+}
+
+@keyframes fire {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes ice {
+  from { text-shadow: 0 0 10px #87ceeb, 0 0 20px #4682b4, 0 0 40px #4682b4; }
+  to { text-shadow: 0 0 15px #87ceeb, 0 0 25px #87ceeb, 0 0 45px #87ceeb; }
+}
+
+@keyframes wave {
+  0%, 100% { transform: translateY(0px); }
+  25% { transform: translateY(-3px); }
+  50% { transform: translateY(0px); }
+  75% { transform: translateY(3px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+@keyframes glitch {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+}
+
+/* Profile Effects Animations */
+@keyframes snowfall {
+  0% { 
+    transform: translateY(-100vh) translateX(0) rotate(0deg); 
+    opacity: 0; 
+  }
+  10% { 
+    opacity: 1; 
+  }
+  90% { 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateY(100vh) translateX(100px) rotate(360deg); 
+    opacity: 0; 
+  }
+}
+
+@keyframes rainfall {
+  0% { 
+    transform: translateY(-100vh) translateX(0); 
+    opacity: 0; 
+  }
+  10% { 
+    opacity: 0.8; 
+  }
+  90% { 
+    opacity: 0.8; 
+  }
+  100% { 
+    transform: translateY(100vh) translateX(-50px); 
+    opacity: 0; 
+  }
+}
+
+@keyframes leaffall {
+  0% { 
+    transform: translateY(-100vh) translateX(0) rotate(0deg); 
+    opacity: 0; 
+  }
+  10% { 
+    opacity: 1; 
+  }
+  90% { 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateY(100vh) translateX(200px) rotate(720deg); 
+    opacity: 0; 
+  }
+}
+
+@keyframes confettifall {
+  0% { 
+    transform: translateY(-100vh) rotate(0deg); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: translateY(100vh) rotate(720deg); 
+    opacity: 0; 
+  }
+}
+
+@keyframes heartfloat {
+  0% { 
+    transform: translateY(100vh) scale(0); 
+    opacity: 0; 
+  }
+  50% { 
+    opacity: 0.7; 
+  }
+  100% { 
+    transform: translateY(-100vh) scale(1); 
+    opacity: 0; 
+  }
+}
+
+@keyframes bubbleup {
+  0% { 
+    transform: translateY(100vh) scale(0); 
+    opacity: 0; 
+  }
+  50% { 
+    opacity: 0.5; 
+  }
+  100% { 
+    transform: translateY(-100vh) scale(1); 
+    opacity: 0; 
+  }
+}
+
+/* Username Effects Animations */
+@keyframes rainbow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes glow {
+  from { 
+    text-shadow: 0 0 10px #7c3aed, 0 0 20px #7c3aed, 0 0 40px #7c3aed;
+  }
+  to { 
+    text-shadow: 0 0 20px #7c3aed, 0 0 30px #7c3aed, 0 0 60px #7c3aed;
+  }
+}
+
+@keyframes neon {
+  from { 
+    text-shadow: 0 0 5px #00ffff, 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #00ffff;
+  }
+  to { 
+    text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 40px #00ffff, 0 0 80px #00ffff;
+  }
+}
+
+@keyframes fire {
+  0% { background-position: 0% 50%; }
+  25% { background-position: 100% 50%; }
+  50% { background-position: 200% 50%; }
+  75% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes wave {
+  0% { transform: translateY(0px); }
+  25% { transform: translateY(-10px); }
+  50% { transform: translateY(0px); }
+  75% { transform: translateY(10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes ice {
+  0% { 
+    color: #87ceeb;
+    text-shadow: 0 0 10px #87ceeb, 0 0 20px #4682b4, 0 0 40px #4682b4;
+  }
+  50% { 
+    color: #b0e0e6;
+    text-shadow: 0 0 15px #b0e0e6, 0 0 25px #4682b4, 0 0 50px #4682b4;
+  }
+  100% { 
+    color: #87ceeb;
+    text-shadow: 0 0 10px #87ceeb, 0 0 20px #4682b4, 0 0 40px #4682b4;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dark-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--medium-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--light-gray);
+}
