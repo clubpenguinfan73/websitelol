@@ -121,6 +121,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.log('Discord API error caught in route handler, using fallback profile data');
       // Return fallback profile data with proper formatting
+      // Based on Discord profile: https://discordapp.com/users/142694270405574657
+      // User has 4 badges: Early Supporter, HypeSquad Events, Bug Hunter Level 1, Active Developer
+      // Plus the new evolving Nitro badge (not in public_flags yet)
       const fallbackUser = {
         id: "142694270405574657",
         username: "clubpenguinfan73",
@@ -128,9 +131,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         avatar: "db5d334e369b55874ab78bdddac83137",
         banner: null,
         accent_color: 2303016,
-        public_flags: 512,
-        premium_type: 0,
-        flags: 512,
+        // Calculate combined public_flags for multiple badges:
+        // Early Supporter (512) + HypeSquad Events (4) + Bug Hunter Level 1 (8) + Active Developer (4194304)
+        public_flags: 512 + 4 + 8 + 4194304, // = 4194828
+        premium_type: 2, // Nitro
+        flags: 512 + 4 + 8 + 4194304,
         global_name: "Catrina",
         banner_color: "#232428",
         clan: {

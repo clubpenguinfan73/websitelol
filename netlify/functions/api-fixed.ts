@@ -142,16 +142,21 @@ const handler: Handler = async (event, context) => {
     }
     
     if (path === '/discord/profile' && method === 'GET') {
-      // Return Discord profile with fallback data
+      // Return Discord profile with fallback data matching real Discord profile
+      // Based on https://discordapp.com/users/142694270405574657
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           id: "142694270405574657",
           username: "clubpenguinfan73",
-          displayName: "Catrina",
-          avatar: "https://cdn.discordapp.com/avatars/142694270405574657/a_example.gif",
-          badges: ["Early Supporter"],
+          discriminator: "0",
+          avatar: "https://cdn.discordapp.com/avatars/142694270405574657/db5d334e369b55874ab78bdddac83137.png?size=128",
+          banner: null,
+          accentColor: 2303016,
+          badges: ["Early Supporter", "HypeSquad Events", "Bug Hunter Level 1", "Active Developer"],
+          premiumType: 2,
+          publicFlags: 4194828, // 512 + 4 + 8 + 4194304 for all 4 badges
           status: "online",
           clan: ":c"
         })
