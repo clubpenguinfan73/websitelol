@@ -225,7 +225,7 @@ const ActivityTracker: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-lg">
+    <div className="w-full max-w-xl">
       {renderSpotifyActivity()}
       {renderDiscordActivity()}
       
