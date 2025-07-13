@@ -7,11 +7,20 @@ interface DiscordActivity {
   state?: string;
   status: string;
   customStatus?: string;
+  applicationId?: string;
   typeText: string;
+}
+
+interface GameIcon {
+  id: string;
+  name: string;
+  icon: string | null;
+  description: string | null;
 }
 
 export function DiscordActivityDisplay() {
   const [activity, setActivity] = useState<DiscordActivity | null>(null);
+  const [gameIcon, setGameIcon] = useState<GameIcon | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,6 +31,19 @@ export function DiscordActivityDisplay() {
         if (response.ok) {
           const data = await response.json();
           setActivity(data);
+          
+          // Fetch game icon if application ID is available
+          if (data?.applicationId) {
+            const iconResponse = await fetch(`/api/discord/app-icon/${data.applicationId}`);
+            if (iconResponse.ok) {
+              const iconData = await iconResponse.json();
+              setGameIcon(iconData);
+            } else {
+              setGameIcon(null);
+            }
+          } else {
+            setGameIcon(null);
+          }
         } else {
           setError('Failed to fetch Discord activity');
         }
@@ -104,9 +126,21 @@ export function DiscordActivityDisplay() {
       )}
 
       <div className="bg-gray-700 rounded p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-purple-400 text-sm font-medium">{activity.typeText}</span>
-          <span className="text-white font-medium">{activity.name}</span>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-purple-400 text-sm font-medium">{activity.typeText}</span>
+            <span className="text-white font-medium">{activity.name}</span>
+          </div>
+          {gameIcon?.icon && (
+            <img 
+              src={gameIcon.icon} 
+              alt={`${activity.name} icon`}
+              className="w-8 h-8 rounded-lg bg-gray-600 p-1"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          )}
         </div>
         
         {activity.details && (

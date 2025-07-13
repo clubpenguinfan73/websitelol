@@ -15,6 +15,7 @@ interface DiscordActivity {
   type: number;
   details?: string;
   state?: string;
+  application_id?: string;
   timestamps?: {
     start?: number;
     end?: number;
@@ -152,6 +153,9 @@ class DiscordGateway {
         activity.type === 4 // Custom status
       );
 
+      // Debug logging to understand the structure
+      console.log('Discord Gateway: Raw activities:', JSON.stringify(presence.activities, null, 2));
+
       // Update database with new activity data
       await db.update(profiles)
         .set({
@@ -160,6 +164,7 @@ class DiscordGateway {
           discordActivityDetails: gameActivity?.details || null,
           discordActivityState: gameActivity?.state || null,
           discordActivityType: gameActivity?.type || 0,
+          discordActivityApplicationId: gameActivity?.application_id || null,
           discordCustomStatus: customStatus?.state || null,
         })
         .where(eq(profiles.discordUserId, presence.user.id));
@@ -248,8 +253,13 @@ class DiscordGateway {
                 type: 0,
                 details: 'Browsing Menus',
                 state: 'In Game',
+                application_id: '444517240263196672', // Bloons TD 6 app ID
                 timestamps: {
                   start: Date.now() - 300000 // 5 minutes ago
+                },
+                assets: {
+                  large_image: 'bloons-td-6-icon',
+                  large_text: 'Bloons TD 6'
                 }
               }
             ],

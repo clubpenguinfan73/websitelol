@@ -32,6 +32,7 @@ export const profiles = pgTable("profiles", {
   discordActivityDetails: text("discord_activity_details"),
   discordActivityState: text("discord_activity_state"),
   discordActivityType: integer("discord_activity_type").default(0),
+  discordActivityApplicationId: text("discord_activity_application_id"),
   discordStatus: text("discord_status").default("offline"),
   discordCustomStatus: text("discord_custom_status"),
   spotifyEnabled: boolean("spotify_enabled").default(false),

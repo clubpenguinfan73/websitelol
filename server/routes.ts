@@ -181,6 +181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           state: profile.discordActivityState,
           status: profile.discordStatus || 'offline',
           customStatus: profile.discordCustomStatus,
+          applicationId: profile.discordActivityApplicationId,
           // Add human-readable type
           typeText: profile.discordActivityType === 0 ? 'Playing' : 
                    profile.discordActivityType === 1 ? 'Streaming' : 
@@ -196,6 +197,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Discord activity error:', error);
       res.status(500).json({ message: "Failed to fetch Discord activity" });
+    }
+  });
+
+  // Discord application icon endpoint
+  app.get("/api/discord/app-icon/:appId", async (req, res) => {
+    try {
+      const appId = req.params.appId;
+      
+      if (!appId) {
+        return res.status(400).json({ message: "Application ID is required" });
+      }
+
+      // Fetch application details from Discord API
+      const response = await fetch(`https://discord.com/api/v10/applications/${appId}/rpc`);
+      
+      if (!response.ok) {
+        console.error(`Discord API error for app ${appId}:`, response.status, response.statusText);
+        return res.status(404).json({ message: "Application not found" });
+      }
+
+      const appData = await response.json();
+      
+      // Construct the icon URL
+      const iconUrl = appData.icon 
+        ? `https://cdn.discordapp.com/app-icons/${appId}/${appData.icon}.png?size=64`
+        : null;
+
+      res.json({
+        id: appData.id,
+        name: appData.name,
+        icon: iconUrl,
+        description: appData.description || null
+      });
+    } catch (error) {
+      console.error('Discord app icon error:', error);
+      res.status(500).json({ message: "Failed to fetch application icon" });
     }
   });
 
