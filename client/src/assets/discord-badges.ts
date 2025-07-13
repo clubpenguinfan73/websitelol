@@ -125,40 +125,45 @@ export const getBadgesFromFlags = (publicFlags: number): string[] => {
     .map(([name]) => name);
 };
 
-// Discord Badge Icons - Real Discord CDN URLs for authentic badge icons
+// Discord Badge Icons - Using SVG data URLs for reliable display
 export const getBadgeIcon = (badgeName: string): string => {
-  // Official Discord CDN badge URLs - Complete set
-  const badgeIconURLs: { [key: string]: string } = {
-    // Full names (from frontend)
-    "Discord Staff": "https://cdn.discordapp.com/badges/5e74e9b61934fc1f67c65515d1f7e60d.png",
-    "Discord Partner": "https://cdn.discordapp.com/badges/3f9748e53446a137a052f3454e2de41e.png", 
-    "HypeSquad Events": "https://cdn.discordapp.com/badges/bf01d1073931f921909045f3a39fd264.png",
-    "HypeSquad Bravery": "https://cdn.discordapp.com/badges/8a88d63823d8a71cd5e390baa45efa02.png",
-    "HypeSquad Brilliance": "https://cdn.discordapp.com/badges/011940fd013da3f7fb926e4a1cd2e618.png", 
-    "HypeSquad Balance": "https://cdn.discordapp.com/badges/3aa41de486fa12454c3761e8e223442e.png",
-    "Bug Hunter Level 1": "https://cdn.discordapp.com/badges/2717692c7dca7289b35297368a940dd0.png",
-    "Bug Hunter Level 2": "https://cdn.discordapp.com/badges/848f79194d4be5ff5f81505cbd0ce1e6.png",
-    "Early Supporter": "https://cdn.discordapp.com/badges/7060786766c9a840eb3019e725d2b358.png",
-    "Active Developer": "https://cdn.discordapp.com/badges/6bdc42827a38498929a4920da12695d9.png",
-    "Verified Bot Developer": "https://cdn.discordapp.com/badges/6df5892e0f35b051f8b61eace34f4967.png",
-    "Certified Moderator": "https://cdn.discordapp.com/badges/40b8e8b6b4a55e7c4e2d8d1b3e3b8ba2.png",
-    "Bot HTTP Interactions": "https://cdn.discordapp.com/badges/6f26ddd1bf59740c536d2274bb834a55.png",
-    
-    // Backend snake_case names (from API)
-    "discord_staff": "https://cdn.discordapp.com/badges/5e74e9b61934fc1f67c65515d1f7e60d.png",
-    "discord_partner": "https://cdn.discordapp.com/badges/3f9748e53446a137a052f3454e2de41e.png", 
-    "hypesquad_events": "https://cdn.discordapp.com/badges/bf01d1073931f921909045f3a39fd264.png",
-    "hypesquad_bravery": "https://cdn.discordapp.com/badges/8a88d63823d8a71cd5e390baa45efa02.png",
-    "hypesquad_brilliance": "https://cdn.discordapp.com/badges/011940fd013da3f7fb926e4a1cd2e618.png", 
-    "hypesquad_balance": "https://cdn.discordapp.com/badges/3aa41de486fa12454c3761e8e223442e.png",
-    "bug_hunter_level_1": "https://cdn.discordapp.com/badges/2717692c7dca7289b35297368a940dd0.png",
-    "bug_hunter_level_2": "https://cdn.discordapp.com/badges/848f79194d4be5ff5f81505cbd0ce1e6.png",
-    "early_supporter": "https://cdn.discordapp.com/badges/7060786766c9a840eb3019e725d2b358.png",
-    "active_developer": "https://cdn.discordapp.com/badges/6bdc42827a38498929a4920da12695d9.png",
-    "verified_developer": "https://cdn.discordapp.com/badges/6df5892e0f35b051f8b61eace34f4967.png",
-    "moderator_alumni": "https://cdn.discordapp.com/badges/40b8e8b6b4a55e7c4e2d8d1b3e3b8ba2.png",
-    "bot_http_interactions": "https://cdn.discordapp.com/badges/6f26ddd1bf59740c536d2274bb834a55.png"
+  // Convert SVG to data URL for reliable display
+  const svgToDataUrl = (svg: string): string => {
+    return `data:image/svg+xml;base64,${btoa(svg)}`;
   };
   
-  return badgeIconURLs[badgeName] || "https://cdn.discordapp.com/badges/7060786766c9a840eb3019e725d2b358.png";
+  // Official Discord badge SVG content mapped to both full names and snake_case
+  const badgeIconURLs: { [key: string]: string } = {
+    // Full names (from frontend)
+    "Discord Staff": svgToDataUrl(discordBadges.staff),
+    "Discord Partner": svgToDataUrl(discordBadges.partner), 
+    "HypeSquad Events": svgToDataUrl(discordBadges.hypesquad_events),
+    "HypeSquad Bravery": svgToDataUrl(discordBadges.hypesquad_bravery),
+    "HypeSquad Brilliance": svgToDataUrl(discordBadges.hypesquad_brilliance), 
+    "HypeSquad Balance": svgToDataUrl(discordBadges.hypesquad_balance),
+    "Bug Hunter Level 1": svgToDataUrl(discordBadges.bug_hunter_level_1),
+    "Bug Hunter Level 2": svgToDataUrl(discordBadges.bug_hunter_level_2),
+    "Early Supporter": svgToDataUrl(discordBadges.early_supporter),
+    "Active Developer": svgToDataUrl(discordBadges.active_developer),
+    "Verified Bot Developer": svgToDataUrl(discordBadges.early_verified_bot_developer),
+    "Certified Moderator": svgToDataUrl(discordBadges.discord_certified_moderator),
+    "Bot HTTP Interactions": svgToDataUrl(discordBadges.bot_http_interactions),
+    
+    // Backend snake_case names (from API)
+    "discord_staff": svgToDataUrl(discordBadges.staff),
+    "discord_partner": svgToDataUrl(discordBadges.partner), 
+    "hypesquad_events": svgToDataUrl(discordBadges.hypesquad_events),
+    "hypesquad_bravery": svgToDataUrl(discordBadges.hypesquad_bravery),
+    "hypesquad_brilliance": svgToDataUrl(discordBadges.hypesquad_brilliance), 
+    "hypesquad_balance": svgToDataUrl(discordBadges.hypesquad_balance),
+    "bug_hunter_level_1": svgToDataUrl(discordBadges.bug_hunter_level_1),
+    "bug_hunter_level_2": svgToDataUrl(discordBadges.bug_hunter_level_2),
+    "early_supporter": svgToDataUrl(discordBadges.early_supporter),
+    "active_developer": svgToDataUrl(discordBadges.active_developer),
+    "verified_developer": svgToDataUrl(discordBadges.early_verified_bot_developer),
+    "moderator_alumni": svgToDataUrl(discordBadges.discord_certified_moderator),
+    "bot_http_interactions": svgToDataUrl(discordBadges.bot_http_interactions)
+  };
+  
+  return badgeIconURLs[badgeName] || svgToDataUrl(discordBadges.early_supporter);
 };
