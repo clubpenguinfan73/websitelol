@@ -1,0 +1,1 @@
+{"name": "dev-script", "version": "1.0.0", "scripts": {"dev": "node start.js"}}
