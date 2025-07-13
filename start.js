@@ -1,90 +1,92 @@
-#!/usr/bin/env node
+import { spawn } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Simple startup script that works with the current environment
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// First, let's check if we can restore the working vite.config.ts
+function restoreViteConfig() {
+    const backupPath = path.join(__dirname, 'vite.config.ts.backup');
+    const configPath = path.join(__dirname, 'vite.config.ts');
+    
+    if (fs.existsSync(backupPath)) {
+        console.log('Restoring vite.config.ts from backup...');
+        fs.copyFileSync(backupPath, configPath);
+        return true;
+    }
+    return false;
+}
+
+// If TypeScript server fails, fall back to simple server
+function fallbackToSimpleServer() {
+    console.log('Falling back to simple server...');
+    
+    const simpleServer = spawn('node', ['simple-server.js'], {
+        stdio: 'inherit',
+        env: {
+            ...process.env,
+            NODE_ENV: 'development',
+            PORT: process.env.PORT || '5000'
+        }
+    });
+    
+    simpleServer.on('error', (error) => {
+        console.error('Simple server failed:', error);
+        process.exit(1);
+    });
+    
+    simpleServer.on('exit', (code) => {
+        console.log(`Simple server exited with code ${code}`);
+        process.exit(code);
+    });
+}
+
+// Try to start the main server
+function startMainServer() {
+    console.log('Starting main server...');
+    
+    const mainServer = spawn('node', ['server-runner.mjs'], {
+        stdio: 'inherit',
+        env: {
+            ...process.env,
+            NODE_ENV: 'development',
+            PORT: process.env.PORT || '5000'
+        }
+    });
+    
+    let serverFailed = false;
+    
+    mainServer.on('error', (error) => {
+        console.error('Main server failed to start:', error);
+        serverFailed = true;
+        fallbackToSimpleServer();
+    });
+    
+    mainServer.on('exit', (code) => {
+        console.log(`Main server exited with code ${code}`);
+        if (code !== 0 && !serverFailed) {
+            console.log('Main server failed, trying fallback...');
+            fallbackToSimpleServer();
+        } else {
+            process.exit(code);
+        }
+    });
+    
+    // If server doesn't start within 10 seconds, consider it failed
+    setTimeout(() => {
+        if (!serverFailed) {
+            console.log('Main server seems to be running properly');
+        }
+    }, 10000);
+}
+
+// Main execution
 console.log('Starting development server...');
 
-// Check for TypeScript server
-const tsServerPath = path.join(__dirname, 'server', 'index.ts');
-const simpleServerPath = path.join(__dirname, 'simple-server.js');
+// Try to restore vite config if available
+restoreViteConfig();
 
-if (fs.existsSync(tsServerPath)) {
-  console.log('TypeScript server found, attempting to start...');
-  
-  try {
-    // Try to run with tsx if available
-    const { spawn } = require('child_process');
-    const tsxPath = path.join(__dirname, 'node_modules', '.bin', 'tsx');
-    
-    if (fs.existsSync(tsxPath)) {
-      console.log('Using tsx to run TypeScript server...');
-      const server = spawn(tsxPath, [tsServerPath], {
-        stdio: 'inherit',
-        env: { ...process.env, NODE_ENV: 'development' }
-      });
-      
-      server.on('error', (error) => {
-        console.error('TypeScript server failed:', error.message);
-        console.log('Falling back to simple server...');
-        fallbackToSimpleServer();
-      });
-      
-      server.on('exit', (code) => {
-        if (code !== 0) {
-          console.log(`TypeScript server exited with code ${code}, falling back...`);
-          fallbackToSimpleServer();
-        }
-      });
-    } else {
-      console.log('tsx not found, falling back to simple server...');
-      fallbackToSimpleServer();
-    }
-    
-  } catch (error) {
-    console.error('Error starting TypeScript server:', error.message);
-    console.log('Falling back to simple server...');
-    fallbackToSimpleServer();
-  }
-} else {
-  console.log('TypeScript server not found, using simple server...');
-  fallbackToSimpleServer();
-}
-
-function fallbackToSimpleServer() {
-  console.log('Starting simple server...');
-  
-  if (fs.existsSync(simpleServerPath)) {
-    const { spawn } = require('child_process');
-    const server = spawn('node', [simpleServerPath], {
-      stdio: 'inherit',
-      env: { ...process.env, NODE_ENV: 'development' }
-    });
-    
-    server.on('error', (error) => {
-      console.error('Simple server failed:', error.message);
-      process.exit(1);
-    });
-    
-    server.on('exit', (code) => {
-      console.log(`Simple server exited with code ${code}`);
-      process.exit(code);
-    });
-  } else {
-    console.error('No server files found!');
-    process.exit(1);
-  }
-}
-
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('Received SIGTERM, shutting down gracefully...');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  console.log('Received SIGINT, shutting down gracefully...');
-  process.exit(0);
-});
+// Start the main server
+startMainServer();
