@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Music, Gamepad2, Headphones, Play, Pause, Clock } from 'lucide-react';
 
@@ -59,6 +59,9 @@ const formatElapsedTime = (seconds: number): string => {
 };
 
 const ActivityTracker: React.FC = () => {
+  const [localProgress, setLocalProgress] = useState<number>(0);
+  const [lastUpdate, setLastUpdate] = useState<number>(Date.now());
+  
   // Fetch Discord activity
   const { data: discordActivity } = useQuery<DiscordActivity>({
     queryKey: ['/api/discord/activity'],
@@ -70,47 +73,86 @@ const ActivityTracker: React.FC = () => {
   // Fetch Spotify activity
   const { data: spotifyData } = useQuery<SpotifyTrack>({
     queryKey: ['/api/spotify/current'],
-    refetchInterval: 5000, // Update every 5 seconds for music
+    refetchInterval: 3000, // Update every 3 seconds for music
     retry: 3,
-    staleTime: 2000,
+    staleTime: 1000,
   });
+
+  // Update local progress when Spotify data changes
+  useEffect(() => {
+    if (spotifyData?.is_playing && spotifyData.progress_ms) {
+      setLocalProgress(spotifyData.progress_ms);
+      setLastUpdate(Date.now());
+    }
+  }, [spotifyData]);
+
+  // Increment progress every second if music is playing
+  useEffect(() => {
+    if (!spotifyData?.is_playing) return;
+
+    const interval = setInterval(() => {
+      setLocalProgress(prev => {
+        if (spotifyData?.track?.duration_ms && prev >= spotifyData.track.duration_ms) {
+          return prev; // Don't exceed duration
+        }
+        return prev + 1000; // Add 1 second (1000ms)
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [spotifyData?.is_playing, spotifyData?.track?.duration_ms]);
 
   const renderSpotifyActivity = () => {
     if (!spotifyData?.is_playing) return null;
 
-    const { track, progress_ms, duration_ms } = spotifyData;
-    const progressPercent = (progress_ms / duration_ms) * 100;
+    const { track } = spotifyData;
+    const currentProgress = localProgress;
+    const duration = track.duration_ms;
+    const progressPercent = duration ? (currentProgress / duration) * 100 : 0;
     
     return (
-      <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
-            <Music className="w-6 h-6 text-green-400" />
+      <div className="bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/30 rounded-xl p-4 mb-4 backdrop-blur-sm">
+        <div className="flex items-start gap-4">
+          {/* Album Art */}
+          <div className="flex-shrink-0">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg flex items-center justify-center overflow-hidden">
+              {track.album.images?.[0]?.url ? (
+                <img 
+                  src={track.album.images[0].url} 
+                  alt={track.album.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Music className="w-8 h-8 text-green-400" />
+              )}
+            </div>
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <Headphones className="w-4 h-4 text-green-400" />
+          
+          {/* Track Info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               <span className="text-sm text-green-400 font-medium">Listening to Spotify</span>
             </div>
-            <div className="text-white font-semibold">{track.name}</div>
-            <div className="text-gray-400 text-sm">
-              by {track.artists.map(a => a.name).join(', ')} • {track.album.name}
+            
+            <div className="text-white font-semibold text-lg mb-1 truncate">{track.name}</div>
+            <div className="text-gray-300 text-sm mb-1">
+              by {track.artists.map(a => a.name).join(', ')}
             </div>
+            <div className="text-gray-400 text-xs mb-3 truncate">{track.album.name}</div>
             
             {/* Progress Bar */}
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-xs text-gray-400">
-                {formatTime(Math.floor(progress_ms / 1000))}
-              </span>
-              <div className="flex-1 bg-gray-700 rounded-full h-1">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-gray-400">
+                <span>{formatTime(Math.floor(currentProgress / 1000))}</span>
+                <span>{formatTime(Math.floor(duration / 1000))}</span>
+              </div>
+              <div className="w-full bg-gray-700/50 rounded-full h-2">
                 <div 
-                  className="bg-green-400 h-1 rounded-full transition-all duration-300"
-                  style={{ width: `${progressPercent}%` }}
+                  className="bg-gradient-to-r from-green-400 to-green-500 h-2 rounded-full transition-all duration-1000 ease-linear"
+                  style={{ width: `${Math.min(progressPercent, 100)}%` }}
                 />
               </div>
-              <span className="text-xs text-gray-400">
-                {formatTime(Math.floor(duration_ms / 1000))}
-              </span>
             </div>
           </div>
         </div>
@@ -131,45 +173,47 @@ const ActivityTracker: React.FC = () => {
       }
     };
 
-    const getActivityColor = (type: number) => {
+    const getActivityColors = (type: number) => {
       switch (type) {
-        case 0: return 'blue';
-        case 1: return 'purple';
-        case 2: return 'green';
-        case 3: return 'red';
-        default: return 'gray';
+        case 0: return { bg: 'from-blue-500/10 to-blue-600/10', border: 'border-blue-500/30', text: 'text-blue-400', iconBg: 'from-blue-500/20 to-blue-600/20' };
+        case 1: return { bg: 'from-purple-500/10 to-purple-600/10', border: 'border-purple-500/30', text: 'text-purple-400', iconBg: 'from-purple-500/20 to-purple-600/20' };
+        case 2: return { bg: 'from-green-500/10 to-green-600/10', border: 'border-green-500/30', text: 'text-green-400', iconBg: 'from-green-500/20 to-green-600/20' };
+        case 3: return { bg: 'from-red-500/10 to-red-600/10', border: 'border-red-500/30', text: 'text-red-400', iconBg: 'from-red-500/20 to-red-600/20' };
+        default: return { bg: 'from-gray-500/10 to-gray-600/10', border: 'border-gray-500/30', text: 'text-gray-400', iconBg: 'from-gray-500/20 to-gray-600/20' };
       }
     };
 
-    const color = getActivityColor(discordActivity.type);
+    const colors = getActivityColors(discordActivity.type);
     
     return (
-      <div className={`bg-${color}-500/10 border border-${color}-500/20 rounded-lg p-4 mb-4`}>
-        <div className="flex items-center gap-3">
-          <div className={`w-12 h-12 bg-${color}-500/20 rounded-lg flex items-center justify-center`}>
+      <div className={`bg-gradient-to-r ${colors.bg} border ${colors.border} rounded-xl p-4 mb-4 backdrop-blur-sm`}>
+        <div className="flex items-start gap-4">
+          <div className={`w-12 h-12 bg-gradient-to-br ${colors.iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
             {getActivityIcon(discordActivity.type)}
           </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`text-sm text-${color}-400 font-medium`}>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-2 h-2 ${colors.text.replace('text-', 'bg-')} rounded-full animate-pulse`}></div>
+              <span className={`text-sm ${colors.text} font-medium`}>
                 {discordActivity.typeText}
               </span>
             </div>
-            <div className="text-white font-semibold">{discordActivity.name}</div>
+            
+            <div className="text-white font-semibold text-lg mb-1">{discordActivity.name}</div>
             
             {discordActivity.details && (
-              <div className="text-gray-400 text-sm">{discordActivity.details}</div>
+              <div className="text-gray-300 text-sm mb-1">{discordActivity.details}</div>
             )}
             
             {discordActivity.state && (
-              <div className="text-gray-400 text-sm">{discordActivity.state}</div>
+              <div className="text-gray-400 text-sm mb-2">{discordActivity.state}</div>
             )}
             
             {discordActivity.elapsedTime && (
-              <div className="flex items-center gap-1 mt-2">
-                <Clock className="w-3 h-3 text-gray-400" />
-                <span className="text-xs text-gray-400">
-                  {formatElapsedTime(discordActivity.elapsedTime)}
+              <div className="flex items-center gap-2 mt-3">
+                <Clock className="w-4 h-4 text-gray-400" />
+                <span className="text-sm text-gray-400">
+                  {formatElapsedTime(discordActivity.elapsedTime)} elapsed
                 </span>
               </div>
             )}
@@ -180,21 +224,22 @@ const ActivityTracker: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-        <h3 className="text-white font-semibold">Live Activity</h3>
+    <div className="w-full max-w-lg">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+        <h3 className="text-white font-semibold text-lg">Live Activity</h3>
       </div>
       
       {renderSpotifyActivity()}
       {renderDiscordActivity()}
       
       {!spotifyData?.is_playing && !discordActivity && (
-        <div className="text-center py-8 text-gray-400">
-          <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Pause className="w-8 h-8" />
+        <div className="text-center py-12 text-gray-400">
+          <div className="w-20 h-20 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Pause className="w-10 h-10 text-gray-500" />
           </div>
-          <p className="text-sm">No activity detected</p>
+          <p className="text-base font-medium">No activity detected</p>
+          <p className="text-sm text-gray-500 mt-1">Waiting for Spotify or Discord activity...</p>
         </div>
       )}
     </div>
