@@ -82,24 +82,67 @@ export const discordBadges = {
   </svg>`
 };
 
+// Discord Badge Flags - Official Discord public flags mapping
+export const DISCORD_BADGE_FLAGS = {
+  STAFF: 1 << 0,                    // 1
+  PARTNER: 1 << 1,                  // 2
+  HYPESQUAD_EVENTS: 1 << 2,         // 4
+  BUG_HUNTER_LEVEL_1: 1 << 3,       // 8
+  HYPESQUAD_BRAVERY: 1 << 6,        // 64
+  HYPESQUAD_BRILLIANCE: 1 << 7,     // 128
+  HYPESQUAD_BALANCE: 1 << 8,        // 256
+  EARLY_SUPPORTER: 1 << 9,          // 512
+  TEAM_USER: 1 << 10,               // 1024
+  BUG_HUNTER_LEVEL_2: 1 << 14,      // 16384
+  VERIFIED_BOT: 1 << 16,            // 65536
+  VERIFIED_DEVELOPER: 1 << 17,      // 131072
+  CERTIFIED_MODERATOR: 1 << 18,     // 262144
+  BOT_HTTP_INTERACTIONS: 1 << 19,   // 524288
+  ACTIVE_DEVELOPER: 1 << 22,        // 4194304
+};
+
+// Badge name to flag mapping
+export const BADGE_FLAG_MAP = {
+  "Discord Staff": DISCORD_BADGE_FLAGS.STAFF,
+  "Discord Partner": DISCORD_BADGE_FLAGS.PARTNER,
+  "HypeSquad Events": DISCORD_BADGE_FLAGS.HYPESQUAD_EVENTS,
+  "Bug Hunter Level 1": DISCORD_BADGE_FLAGS.BUG_HUNTER_LEVEL_1,
+  "HypeSquad Bravery": DISCORD_BADGE_FLAGS.HYPESQUAD_BRAVERY,
+  "HypeSquad Brilliance": DISCORD_BADGE_FLAGS.HYPESQUAD_BRILLIANCE,
+  "HypeSquad Balance": DISCORD_BADGE_FLAGS.HYPESQUAD_BALANCE,
+  "Early Supporter": DISCORD_BADGE_FLAGS.EARLY_SUPPORTER,
+  "Bug Hunter Level 2": DISCORD_BADGE_FLAGS.BUG_HUNTER_LEVEL_2,
+  "Verified Bot Developer": DISCORD_BADGE_FLAGS.VERIFIED_DEVELOPER,
+  "Certified Moderator": DISCORD_BADGE_FLAGS.CERTIFIED_MODERATOR,
+  "Bot HTTP Interactions": DISCORD_BADGE_FLAGS.BOT_HTTP_INTERACTIONS,
+  "Active Developer": DISCORD_BADGE_FLAGS.ACTIVE_DEVELOPER,
+};
+
+// Function to get badges from public flags
+export const getBadgesFromFlags = (publicFlags: number): string[] => {
+  return Object.entries(BADGE_FLAG_MAP)
+    .filter(([_, flag]) => (publicFlags & flag) === flag)
+    .map(([name]) => name);
+};
+
 // Discord Badge Icons - Real Discord CDN URLs for authentic badge icons
 export const getBadgeIcon = (badgeName: string): string => {
-  // Official Discord CDN badge URLs
+  // Official Discord CDN badge URLs - Complete set
   const badgeIconURLs: { [key: string]: string } = {
-    "Discord Staff": "https://cdn.discordapp.com/badges/1.png",
-    "Discord Partner": "https://cdn.discordapp.com/badges/2.png", 
-    "HypeSquad Events": "https://cdn.discordapp.com/badges/3.png",
-    "HypeSquad Bravery": "https://cdn.discordapp.com/badges/hypesquad_bravery.png",
-    "HypeSquad Brilliance": "https://cdn.discordapp.com/badges/hypesquad_brilliance.png", 
-    "HypeSquad Balance": "https://cdn.discordapp.com/badges/hypesquad_balance.png",
-    "Bug Hunter Level 1": "https://cdn.discordapp.com/badges/4.png",
-    "Bug Hunter Level 2": "https://cdn.discordapp.com/badges/9.png",
-    "Early Supporter": "https://cdn.discordapp.com/badges/6.png",
-    "Active Developer": "https://cdn.discordapp.com/badges/active_developer.png",
-    "Verified Bot Developer": "https://cdn.discordapp.com/badges/14.png",
-    "Certified Moderator": "https://cdn.discordapp.com/badges/certified_moderator.png",
-    "Bot HTTP Interactions": "https://cdn.discordapp.com/badges/bot_http_interactions.png"
+    "Discord Staff": "https://cdn.discordapp.com/badges/5e74e9b61934fc1f67c65515d1f7e60d.png",
+    "Discord Partner": "https://cdn.discordapp.com/badges/3f9748e53446a137a052f3454e2de41e.png", 
+    "HypeSquad Events": "https://cdn.discordapp.com/badges/bf01d1073931f921909045f3a39fd264.png",
+    "HypeSquad Bravery": "https://cdn.discordapp.com/badges/8a88d63823d8a71cd5e390baa45efa02.png",
+    "HypeSquad Brilliance": "https://cdn.discordapp.com/badges/011940fd013da3f7fb926e4a1cd2e618.png", 
+    "HypeSquad Balance": "https://cdn.discordapp.com/badges/3aa41de486fa12454c3761e8e223442e.png",
+    "Bug Hunter Level 1": "https://cdn.discordapp.com/badges/2717692c7dca7289b35297368a940dd0.png",
+    "Bug Hunter Level 2": "https://cdn.discordapp.com/badges/848f79194d4be5ff5f81505cbd0ce1e6.png",
+    "Early Supporter": "https://cdn.discordapp.com/badges/7060786766c9a840eb3019e725d2b358.png",
+    "Active Developer": "https://cdn.discordapp.com/badges/6bdc42827a38498929a4920da12695d9.png",
+    "Verified Bot Developer": "https://cdn.discordapp.com/badges/6df5892e0f35b051f8b61eace34f4967.png",
+    "Certified Moderator": "https://cdn.discordapp.com/badges/40b8e8b6b4a55e7c4e2d8d1b3e3b8ba2.png",
+    "Bot HTTP Interactions": "https://cdn.discordapp.com/badges/6f26ddd1bf59740c536d2274bb834a55.png"
   };
   
-  return badgeIconURLs[badgeName] || "https://cdn.discordapp.com/badges/6.png";
+  return badgeIconURLs[badgeName] || "https://cdn.discordapp.com/badges/7060786766c9a840eb3019e725d2b358.png";
 };

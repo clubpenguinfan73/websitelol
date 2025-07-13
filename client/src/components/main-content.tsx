@@ -334,7 +334,7 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
                               className="w-4 h-4 object-contain"
                               onError={(e) => {
                                 // Fallback to Early Supporter badge if image fails to load
-                                (e.target as HTMLImageElement).src = "https://cdn.discordapp.com/badges/6.png";
+                                (e.target as HTMLImageElement).src = "https://cdn.discordapp.com/badges/7060786766c9a840eb3019e725d2b358.png";
                               }}
                             />
                           </div>
