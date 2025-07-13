@@ -143,6 +143,8 @@ export const getBadgeIcon = (badgeName: string): string => {
     "Verified Bot Developer": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbotdev.svg",
     "Certified Moderator": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordmod.svg",
     "Bot HTTP Interactions": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordstaff.svg",
+    "Nitro Classic": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordnitro.svg",
+    "Nitro": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordnitro.svg",
     
     // Backend snake_case names (from API)
     "discord_staff": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordstaff.svg",
@@ -157,8 +159,28 @@ export const getBadgeIcon = (badgeName: string): string => {
     "active_developer": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/activedeveloper.svg",
     "verified_developer": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbotdev.svg",
     "moderator_alumni": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordmod.svg",
-    "bot_http_interactions": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordstaff.svg"
+    "bot_http_interactions": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordstaff.svg",
+    "nitro_classic": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/nitro.svg",
+    "nitro": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/nitro.svg"
   };
   
   return badgeIconURLs[badgeName] || "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordearlysupporter.svg";
+};
+
+// Function to combine badges from public_flags and premium_type
+export const getCombinedBadges = (publicFlags: number, premiumType: number | null): string[] => {
+  const badges: string[] = [];
+  
+  // Add badges from public_flags
+  const publicBadges = getBadgesFromFlags(publicFlags);
+  badges.push(...publicBadges);
+  
+  // Add Nitro badges based on premium_type
+  if (premiumType === 1) {
+    badges.push("Nitro Classic");
+  } else if (premiumType === 2) {
+    badges.push("Nitro");
+  }
+  
+  return badges;
 };

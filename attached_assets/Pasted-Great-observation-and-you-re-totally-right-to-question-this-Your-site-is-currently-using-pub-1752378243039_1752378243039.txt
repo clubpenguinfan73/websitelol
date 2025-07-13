@@ -1,0 +1,84 @@
+Great observation — and you’re **totally right to question this.** Your site is currently using `public_flags` from the Discord API, which **does not include Nitro, Boosting, or Quest badges**. That’s why you're seeing only:
+
+* `hypesquad_events`
+* `bug_hunter_level_1`
+* `early_supporter`
+* `active_developer`
+
+### 🔍 Why you're not seeing:
+
+| **Badge**    | **Why it's missing**                              |
+| ------------ | ------------------------------------------------- |
+| **Nitro**    | Nitro status is *not* part of `public_flags`.     |
+| **Boosting** | Only visible to bots in a shared server with you. |
+| **Quest**    | This is **not a public badge** in `public_flags`. |
+
+---
+
+## ✅ How to Actually Fix It
+
+You need to either:
+
+### Option 1: **Invite your bot to your server**
+
+So it can access **`premium_type`**, **guild boosting**, and possibly activity like **quests**.
+
+1. Go to [OAuth2 Generator](https://discord.com/developers/applications)
+2. Add `bot` and `guilds.members.read` scopes.
+3. Generate the bot invite URL and invite it to a test server that you're in.
+
+Then in your backend code:
+
+```ts
+const premiumStatus = user.premium_type;
+// 1 = Nitro Classic, 2 = Nitro
+```
+
+---
+
+### Option 2: **Use `flags + premium_type` + fallback logic**
+
+Here’s a better structure:
+
+```ts
+function getBadges(user: any) {
+  const flags = user.public_flags || 0;
+  const badges = [];
+
+  if (flags & (1 << 2)) badges.push({ name: 'HypeSquad Events', icon: '...' });
+  if (flags & (1 << 3)) badges.push({ name: 'Bug Hunter L1', icon: '...' });
+  if (flags & (1 << 9)) badges.push({ name: 'Early Supporter', icon: '...' });
+  if (flags & (1 << 22)) badges.push({ name: 'Active Developer', icon: '...' });
+
+  if (user.premium_type === 1 || user.premium_type === 2) {
+    badges.push({ name: 'Nitro', icon: 'https://.../nitro.svg' });
+  }
+
+  return badges;
+}
+```
+
+> You will need to **include `premium_type`** in your `/api/discord/profile` route.
+
+---
+
+## 🚧 Still Missing Quest or Boosting Badges?
+
+These are **not exposed in the public Discord API**. You’d need a **guild-level bot** with `GUILD_MEMBERS` privileged intent and a shared server.
+
+If you want to track boosting/quests:
+
+* Add the bot to a server you own
+* Enable **Presence** + **Members** intents
+* Use `/guilds/{guild.id}/members/{user.id}` endpoint (requires bot auth)
+* Parse `premium_since` to detect boosts
+
+---
+
+## ✅ Summary
+
+* You're seeing only public flags, not Nitro/Boost/Quest because they're **not part of `public_flags`**
+* **Fix:** Add `premium_type` + possibly use bot in a shared server
+* Optional: Upgrade backend to use `/users/@me/guilds` or `/guilds/:id/members/:id` for extra detail
+
+Would you like me to help update your backend API route to include `premium_type` and support Nitro detection?

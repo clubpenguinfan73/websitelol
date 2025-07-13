@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getBadgeIcon } from '../assets/discord-badges';
+import { getBadgeIcon, getCombinedBadges } from '../assets/discord-badges';
 
 export interface DiscordProfile {
   id: string;
@@ -46,10 +46,16 @@ export function useDiscordProfile() {
     staleTime: 10000, // Data is fresh for 10 seconds
   });
 
-  // Use the real Discord badge icon function that returns CDN URLs
+  // Process the profile to include combined badges (public_flags + premium_type)
+  const processedProfile = profile ? {
+    ...profile,
+    badges: getCombinedBadges(profile.publicFlags, profile.premiumType)
+  } : profile;
+
+
 
   return {
-    profile,
+    profile: processedProfile,
     activity,
     isLoading,
     error,
