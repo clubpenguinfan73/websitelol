@@ -105,5 +105,7 @@ Preferred communication style: Simple, everyday language.
 - **Database Connection**: MongoDB Atlas connection string configuration critical
 - **ES Module Runtime Issue**: Fixed by ensuring package.json has "type": "module" and proper tsx configuration
 - **import.meta.dirname Undefined**: Resolved by configuring proper ES module environment in Node.js 20.18.1
+- **Discord User ID Configuration**: Fixed by making Discord User ID configurable from database instead of hardcoded values
+- **Frontend Settings Not Saving**: Discord User ID field in settings now properly saves and loads from database
 
 The application successfully handles the complexity of integrating multiple external services while maintaining a smooth user experience through proper error handling and fallback content.

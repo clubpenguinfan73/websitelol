@@ -101,7 +101,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Discord profile endpoint called');
     try {
       console.log('Attempting to get Discord user profile...');
-      const user = await discordAPI.getUserProfile();
+      // Get Discord User ID from database
+      const profile = await storage.getProfile(1);
+      const discordUserId = profile?.discordUserId;
+      
+      if (!discordUserId) {
+        console.log('No Discord User ID configured in database');
+        return res.json({
+          id: '',
+          username: 'Discord Not Configured',
+          discriminator: '0000',
+          avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
+          banner: null,
+          accentColor: null,
+          badges: [],
+          premiumType: null,
+          publicFlags: 0
+        });
+      }
+      
+      console.log('Using Discord User ID from database:', discordUserId);
+      const user = await discordAPI.getUserProfile(discordUserId);
       console.log('Discord API success, returning profile data');
       const avatarUrl = discordAPI.getAvatarUrl(user);
       const bannerUrl = discordAPI.getBannerUrl(user);

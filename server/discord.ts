@@ -67,7 +67,7 @@ class DiscordAPI {
   private botToken: string;
   private clientId: string;
   private clientSecret: string;
-  private targetUserId: string = '142694270405574657'; // Your Discord ID
+
   private client: Client | null = null;
   private currentActivity: DiscordActivity | null = null;
 
@@ -97,9 +97,8 @@ class DiscordAPI {
       });
 
       this.client.on('presenceUpdate', (oldPresence, newPresence) => {
-        if (newPresence?.userId === this.targetUserId) {
-          this.updateActivity(newPresence);
-        }
+        // Activity tracking would need specific user ID
+        this.updateActivity(newPresence);
       });
 
       if (this.botToken) {
@@ -206,9 +205,12 @@ class DiscordAPI {
     return response.json();
   }
 
-  async getUserProfile(): Promise<DiscordUser> {
+  async getUserProfile(userId?: string): Promise<DiscordUser> {
     try {
-      return await this.makeRequest(`/users/${this.targetUserId}`);
+      if (!userId) {
+        throw new Error('Discord User ID is required');
+      }
+      return await this.makeRequest(`/users/${userId}`);
     } catch (error) {
       console.error('Error fetching Discord user:', error);
       throw error;
