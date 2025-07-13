@@ -143,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Successfully fetched Discord user data');
       const avatarUrl = discordAPI.getAvatarUrl(userData);
       const bannerUrl = discordAPI.getBannerUrl(userData);
-      const badges = discordAPI.getBadges(userData.public_flags, userData.premium_type);
+      const badges = discordAPI.getBadges(userData.public_flags, userData.premium_type, profile?.discordNitroEnabled);
       
       console.log('Discord user badges:', badges);
       console.log('Public flags:', userData.public_flags);

@@ -271,7 +271,7 @@ class DiscordAPI {
     return `https://cdn.discordapp.com/banners/${user.id}/${user.banner}.${format}?size=${size}`;
   }
 
-  getBadges(publicFlags: number, premiumType?: number): string[] {
+  getBadges(publicFlags: number, premiumType?: number, manualNitroEnabled?: boolean): string[] {
     const badges: string[] = [];
     
     // Official Discord User Flags (Powers of 2) - Updated with official values
@@ -308,10 +308,15 @@ class DiscordAPI {
     if (publicFlags & UserFlags.ACTIVE_DEVELOPER) badges.push('Active Developer');
 
     // Handle Nitro badges separately (not in public_flags)
-    if (premiumType) {
-      if (premiumType === 2) badges.push('Nitro');
-      else if (premiumType === 1) badges.push('Nitro Classic');
-      else if (premiumType === 3) badges.push('Nitro Basic');
+    // Use manual setting if provided, otherwise fall back to API premium_type
+    if (manualNitroEnabled || premiumType) {
+      if (manualNitroEnabled) {
+        badges.push('Nitro');
+      } else {
+        if (premiumType === 2) badges.push('Nitro');
+        else if (premiumType === 1) badges.push('Nitro Classic');
+        else if (premiumType === 3) badges.push('Nitro Basic');
+      }
     }
 
     return badges;

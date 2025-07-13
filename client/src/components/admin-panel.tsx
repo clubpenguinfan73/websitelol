@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, Trash2, Plus, Edit, LogOut, Music, Volume2, VolumeX, User, Image, ExternalLink, Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,7 @@ export default function AdminPanel({
   const [discordEnabled, setDiscordEnabled] = useState(profile?.discordEnabled || false);
   const [discordUserId, setDiscordUserId] = useState(profile?.discordUserId || "");
   const [discordApplicationId, setDiscordApplicationId] = useState(profile?.discordApplicationId || "");
+  const [discordNitroEnabled, setDiscordNitroEnabled] = useState(profile?.discordNitroEnabled || false);
   const [spotifyEnabled, setSpotifyEnabled] = useState(profile?.spotifyEnabled || false);
   const [spotifyTrackName, setSpotifyTrackName] = useState(profile?.spotifyTrackName || "");
   const [spotifyArtistName, setSpotifyArtistName] = useState(profile?.spotifyArtistName || "");
@@ -47,6 +48,24 @@ export default function AdminPanel({
   const spotifyAlbumUploadRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Sync state when profile changes
+  useEffect(() => {
+    if (profile) {
+      setUsername(profile.username || "");
+      setBio(profile.bio || "");
+      setMusicEnabled(profile.musicEnabled || false);
+      setDiscordEnabled(profile.discordEnabled || false);
+      setDiscordUserId(profile.discordUserId || "");
+      setDiscordApplicationId(profile.discordApplicationId || "");
+      setDiscordNitroEnabled(profile.discordNitroEnabled || false);
+      setSpotifyEnabled(profile.spotifyEnabled || false);
+      setSpotifyTrackName(profile.spotifyTrackName || "");
+      setSpotifyArtistName(profile.spotifyArtistName || "");
+      setSpotifyAlbumArt(profile.spotifyAlbumArt || "");
+      setSpotifyTrackUrl(profile.spotifyTrackUrl || "");
+    }
+  }, [profile]);
 
   const updateProfileMutation = useMutation({
     mutationFn: async (profileData: Partial<Profile>) => {
@@ -140,6 +159,7 @@ export default function AdminPanel({
         discordEnabled: profile?.discordEnabled,
         discordUserId: profile?.discordUserId,
         discordApplicationId: profile?.discordApplicationId,
+        discordNitroEnabled: profile?.discordNitroEnabled,
         spotifyEnabled: profile?.spotifyEnabled,
         spotifyTrackName: profile?.spotifyTrackName,
         spotifyArtistName: profile?.spotifyArtistName,
@@ -189,6 +209,7 @@ export default function AdminPanel({
           discordEnabled: profile?.discordEnabled,
           discordUserId: profile?.discordUserId,
           discordApplicationId: profile?.discordApplicationId,
+          discordNitroEnabled: profile?.discordNitroEnabled,
           spotifyEnabled: profile?.spotifyEnabled,
           spotifyTrackName: profile?.spotifyTrackName,
           spotifyArtistName: profile?.spotifyArtistName,
@@ -224,6 +245,7 @@ export default function AdminPanel({
       discordEnabled: profile?.discordEnabled,
       discordUserId: profile?.discordUserId,
       discordApplicationId: profile?.discordApplicationId,
+      discordNitroEnabled: profile?.discordNitroEnabled,
       spotifyEnabled: profile?.spotifyEnabled,
       spotifyTrackName: profile?.spotifyTrackName,
       spotifyArtistName: profile?.spotifyArtistName,
@@ -244,6 +266,7 @@ export default function AdminPanel({
       discordEnabled: profile?.discordEnabled,
       discordUserId: profile?.discordUserId,
       discordApplicationId: profile?.discordApplicationId,
+      discordNitroEnabled: profile?.discordNitroEnabled,
       spotifyEnabled: profile?.spotifyEnabled,
       spotifyTrackName: profile?.spotifyTrackName,
       spotifyArtistName: profile?.spotifyArtistName,
@@ -263,6 +286,7 @@ export default function AdminPanel({
       discordEnabled: profile?.discordEnabled,
       discordUserId: profile?.discordUserId,
       discordApplicationId: profile?.discordApplicationId,
+      discordNitroEnabled: profile?.discordNitroEnabled,
       spotifyEnabled: profile?.spotifyEnabled,
       spotifyTrackName: profile?.spotifyTrackName,
       spotifyArtistName: profile?.spotifyArtistName,
@@ -323,6 +347,7 @@ export default function AdminPanel({
       discordEnabled: profile?.discordEnabled,
       discordUserId: profile?.discordUserId,
       discordApplicationId: profile?.discordApplicationId,
+      discordNitroEnabled: profile?.discordNitroEnabled,
       spotifyEnabled: enabled,
       spotifyTrackName: profile?.spotifyTrackName,
       spotifyArtistName: profile?.spotifyArtistName,
@@ -342,6 +367,7 @@ export default function AdminPanel({
       discordEnabled: profile?.discordEnabled,
       discordUserId,
       discordApplicationId,
+      discordNitroEnabled,
       spotifyEnabled: profile?.spotifyEnabled,
       spotifyTrackName: profile?.spotifyTrackName,
       spotifyArtistName: profile?.spotifyArtistName,
@@ -361,6 +387,7 @@ export default function AdminPanel({
       discordEnabled: profile?.discordEnabled,
       discordUserId: profile?.discordUserId,
       discordApplicationId: profile?.discordApplicationId,
+      discordNitroEnabled: profile?.discordNitroEnabled,
       spotifyEnabled: profile?.spotifyEnabled,
       spotifyTrackName,
       spotifyArtistName,
@@ -584,6 +611,15 @@ export default function AdminPanel({
                         onChange={(e) => setDiscordApplicationId(e.target.value)}
                         className="bg-medium-gray border-light-gray focus:border-indigo-500"
                       />
+                      
+                      <div className="flex items-center justify-between">
+                        <span className="text-white text-sm">Enable Nitro Badge</span>
+                        <Switch
+                          checked={discordNitroEnabled}
+                          onCheckedChange={setDiscordNitroEnabled}
+                          className="data-[state=checked]:bg-indigo-600"
+                        />
+                      </div>
                       
                       <Button
                         onClick={handleUpdateDiscordSettings}
