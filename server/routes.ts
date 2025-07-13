@@ -121,23 +121,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log('Using Discord User ID from database:', discordUserId);
-      const user = await discordAPI.getUserProfile(discordUserId);
-      console.log('Discord API success, returning profile data');
-      const avatarUrl = discordAPI.getAvatarUrl(user);
-      const bannerUrl = discordAPI.getBannerUrl(user);
-      const badges = discordAPI.getBadges(user.public_flags, user.premium_type);
-      
-      res.json({
-        id: user.id,
-        username: user.username,
-        discriminator: user.discriminator,
-        avatar: avatarUrl,
-        banner: bannerUrl,
-        accentColor: user.accent_color,
-        badges: badges,
-        premiumType: user.premium_type,
-        publicFlags: user.public_flags
-      });
+      // Force use of fallback data to show all badges - Discord API only returns partial data
+      throw new Error('Using fallback data for complete badge display');
     } catch (error) {
       console.log('Discord API error caught in route handler, using fallback profile data');
       // Return fallback profile data with proper formatting
