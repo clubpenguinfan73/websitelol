@@ -226,11 +226,6 @@ const ActivityTracker: React.FC = () => {
 
   return (
     <div className="w-full max-w-lg">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-        <h3 className="text-white font-semibold text-lg">Live Activity</h3>
-      </div>
-      
       {renderSpotifyActivity()}
       {renderDiscordActivity()}
       
