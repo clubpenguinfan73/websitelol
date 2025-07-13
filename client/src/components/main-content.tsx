@@ -327,30 +327,26 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
                       <h4 className="font-semibold text-white">{discordProfile.username}</h4>
                       <div className="flex items-center gap-1">
                         {/* Render actual Discord badges if available */}
-                        {discordProfile.badges && discordProfile.badges.length > 0 && discordProfile.badges.map((badge, index) => {
-                          console.log(`Rendering badge: ${badge}`);
-                          return (
-                            <div key={index} className="w-5 h-5 flex items-center justify-center" title={badge}>
-                              <img 
-                                src={getBadgeIcon(badge)}
-                                alt={badge}
-                                title={badge}
-                                className="w-5 h-5"
-                                style={{ 
-                                  width: '20px', 
-                                  height: '20px',
-                                  minWidth: '20px',
-                                  minHeight: '20px'
-                                }}
-                                onError={(e) => {
-                                  console.log(`Failed to load badge: ${badge}`);
-                                  // Hide failed badges rather than show broken images
-                                  (e.target as HTMLImageElement).style.display = 'none';
-                                }}
-                              />
-                            </div>
-                          );
-                        })}
+                        {discordProfile.badges && discordProfile.badges.length > 0 && discordProfile.badges.map((badge, index) => (
+                          <div key={index} className="w-5 h-5 flex items-center justify-center" title={badge}>
+                            <img 
+                              src={getBadgeIcon(badge)}
+                              alt={badge}
+                              title={badge}
+                              className="w-5 h-5"
+                              style={{ 
+                                width: '20px', 
+                                height: '20px',
+                                minWidth: '20px',
+                                minHeight: '20px'
+                              }}
+                              onError={(e) => {
+                                // Hide failed badges rather than show broken images
+                                (e.target as HTMLImageElement).style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        ))}
                       </div>
                     </div>
 

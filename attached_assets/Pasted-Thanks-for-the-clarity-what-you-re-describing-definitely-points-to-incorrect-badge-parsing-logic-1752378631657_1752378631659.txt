@@ -1,0 +1,113 @@
+Thanks for the clarity — what you're describing **definitely points to incorrect badge parsing logic**. Here's a breakdown of **why it's happening**, what **each badge actually is**, and how to **fix it properly** in your code or API logic.
+
+---
+
+### ✅ What Badges Are Actually Tracked?
+
+Discord uses a property called `public_flags` (an integer bitfield) to store badge data. However:
+
+* **Nitro badge** is **not** in `public_flags` (it's in the `premium_type`)
+* **Server Boost badge** is **not** in `public_flags` either
+* **Quest badge** is currently **not exposed publicly by the API**
+* You're likely using outdated logic that assumes badges based only on `public_flags`, which **misses some** and **adds some you don't have**.
+
+---
+
+### 🎯 Correct Badge Mapping
+
+#### 1. `public_flags` (bitmask badges):
+
+These come from the `user.public_flags` value and must be bitwise-checked:
+
+| Badge Name               | Bitmask Value | Notes                        |
+| ------------------------ | ------------- | ---------------------------- |
+| `DISCORD_EMPLOYEE`       | `1 << 0`      | Rare, internal staff         |
+| `PARTNERED_SERVER_OWNER` | `1 << 1`      | Partner badge                |
+| `HYPESQUAD_EVENTS`       | `1 << 2`      | You do NOT have this         |
+| `BUG_HUNTER_LEVEL_1`     | `1 << 3`      | You do NOT have this         |
+| `HOUSE_BRAVERY`          | `1 << 6`      | HypeSquad House (not Events) |
+| `EARLY_SUPPORTER`        | `1 << 9`      | ✅ You have this              |
+| `ACTIVE_DEVELOPER`       | `1 << 22`     | You do NOT have this         |
+
+> ✅ Fix: You must only show badges where `public_flags & BITMASK === BITMASK`
+
+---
+
+#### 2. `premium_type` (for Nitro)
+
+This is a separate field entirely:
+
+| `premium_type` Value | Meaning                           |
+| -------------------- | --------------------------------- |
+| `0` or `null`        | No Nitro                          |
+| `1`                  | Nitro Classic                     |
+| `2`                  | Nitro                             |
+| `3+`                 | Nitro Basic, Boost, etc. (varies) |
+
+> ✅ If `premium_type >= 1`, show **Nitro badge**
+
+---
+
+#### 3. Boost Badge
+
+Boost info comes from `guild.member.premium_since`, but only **inside a server context** — **you can’t get this from the user object** via OAuth or bot unless you're fetching it from within a **guild** where the bot is a member.
+
+> ⚠️ If your bot isn't in a server with the user, you can't see if they're boosting.
+
+---
+
+#### 4. Quest Badge
+
+Currently **not available** from any public API. This is Discord internal only (for now).
+
+---
+
+### 🚫 Why You're Seeing Wrong Badges
+
+You're likely:
+
+* Mapping `public_flags` statically or incorrectly
+* Not verifying `public_flags & BITMASK` correctly
+* Displaying all 4 (hype squad, bug hunter, active dev, early supporter) by default
+* Assuming Nitro = badge without checking `premium_type`
+
+---
+
+### ✅ Suggested Fix Logic (JavaScript Example)
+
+```js
+function getUserBadges(user) {
+  const flags = user.public_flags || 0;
+  const badges = [];
+
+  const BITMASKS = {
+    EARLY_SUPPORTER: 1 << 9,
+    // Only add the ones they actually have
+  };
+
+  if (flags & BITMASKS.EARLY_SUPPORTER) {
+    badges.push("early_supporter");
+  }
+
+  if (user.premium_type >= 1) {
+    badges.push("nitro");
+  }
+
+  return badges;
+}
+```
+
+You can then map these to icons from [mezotv/discord-badges](https://github.com/mezotv/discord-badges) or Discord CDN.
+
+---
+
+### ✅ Want Help Fixing It?
+
+If you give me access to the file where you're decoding the badge data (probably your `api/discord/profile.ts` or similar), I can **patch the badge logic live for you**, so it **only shows real badges** like:
+
+* ✅ Early Supporter
+* ✅ Nitro
+* ✅ Server Booster (if accessible)
+* 🚫 Not: Bug Hunter, HypeSquad Events, Active Dev (unless real)
+
+Let me know if you'd like me to walk through fixing that file!

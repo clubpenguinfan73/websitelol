@@ -137,10 +137,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         banner: null,
         accent_color: 2303016,
         // Calculate combined public_flags for multiple badges:
-        // Early Supporter (512) + HypeSquad Events (4) + Bug Hunter Level 1 (8) + Active Developer (4194304)
-        public_flags: 512 + 4 + 8 + 4194304, // = 4194828
+        // Early Supporter (512) + HypeSquad Balance (256) + Bug Hunter Level 2 (16384)
+        public_flags: 512 + 256 + 16384, // = 17152
         premium_type: 2, // Nitro
-        flags: 512 + 4 + 8 + 4194304,
+        flags: 512 + 256 + 16384,
         global_name: "Catrina",
         banner_color: "#232428",
         clan: {
@@ -154,6 +154,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const avatarUrl = discordAPI.getAvatarUrl(fallbackUser as any);
       const bannerUrl = discordAPI.getBannerUrl(fallbackUser as any);
       const badges = discordAPI.getBadges(fallbackUser.public_flags);
+      
+
       
       res.json({
         id: fallbackUser.id,
