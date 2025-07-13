@@ -469,12 +469,14 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
           )}
           
           {/* Real-time Activity Tracker */}
-          <motion.div
-            className="transition-all duration-200 hover:shadow-2xl"
-            whileHover={{ scale: 1.02 }}
-          >
-            <ActivityTracker />
-          </motion.div>
+          <div className="flex justify-center">
+            <motion.div
+              className="transition-all duration-200 hover:shadow-2xl"
+              whileHover={{ scale: 1.02 }}
+            >
+              <ActivityTracker />
+            </motion.div>
+          </div>
         </div>
 
 
