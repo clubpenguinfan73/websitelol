@@ -1,7 +1,7 @@
 [build]
   command = "npm install && npm run build && mkdir -p dist/functions && npx esbuild netlify/functions/mongo-api.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/functions/api.js"
   publish = "dist/public"
-  environment = { NODE_VERSION = "18" }
+  environment = { NODE_VERSION = "20.18.1" }
 
 [[headers]]
   for = "/*"

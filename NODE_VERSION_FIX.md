@@ -1,74 +1,72 @@
-# Node.js Version Fix for Netlify Build - July 13, 2025
+# Node.js Version Fix - July 13, 2025
 
 ## Issue Identified
-Netlify build failing because Node.js v20.12.2 is incompatible with Vite 7.0.4, which requires Node.js '^20.19.0 || >=22.12.0'.
-
-## Error Details
-```
-npm WARN EBADENGINE Unsupported engine
-Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from vite.config.ts
-```
+Netlify build failing because project requires Node.js >= 20.18.1 but was set to Node.js 18.
 
 ## Solution Applied
-Updated netlify.toml with compatible Node.js version:
 
+### 1. ✅ Updated netlify.toml
 ```toml
-[build.environment]
-  NODE_VERSION = "20.19.0"
+environment = { NODE_VERSION = "20.18.1" }
 ```
 
-## Complete netlify.toml Configuration
+### 2. ✅ Created .nvmrc file
+```
+20.18.1
+```
+
+### 3. ⚠️ Package.json engines field
+Cannot edit package.json directly due to restrictions, but you can manually add:
+```json
+"engines": {
+  "node": ">=20.18.1"
+}
+```
+
+## Current Configuration
+
+### Fixed netlify.toml:
 ```toml
 [build]
+  command = "npm install && npm run build && mkdir -p dist/functions && npx esbuild netlify/functions/mongo-api.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/functions/api.js"
   publish = "dist/public"
-  command = "npm install && npx vite build && mkdir -p dist/functions && npx esbuild netlify/functions/mongo-api.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/functions/api.js"
-
-[build.environment]
-  NODE_VERSION = "20.19.0"
-
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    X-XSS-Protection = "1; mode=block"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-
-[[headers]]
-  for = "/api/*"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/api-mongo/*"
-  to = "/.netlify/functions/mongo-api/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
-
-[functions]
-  directory = "dist/functions"
-  node_bundler = "esbuild"
+  environment = { NODE_VERSION = "20.18.1" }
 ```
 
-## Expected Result
-- Netlify will use Node.js v20.19.0 (compatible with Vite 7.0.4)
-- Vite build will complete successfully
-- Site will deploy without black screen
-- Admin panel will work with MongoDB persistence
+### New .nvmrc file:
+```
+20.18.1
+```
 
-## Ready for Deployment
-1. Push changes to GitHub: `git push origin main`
-2. Netlify will auto-deploy with correct Node version
-3. Build should complete successfully
-4. Site will load properly at https://renegaderaider.wtf
+## Manual Steps Required
 
-This fixes the root cause of the black screen deployment issue.
+1. **Add to package.json** (if you can edit it):
+```json
+"engines": {
+  "node": ">=20.18.1"
+}
+```
+
+2. **Deploy Commands**:
+```bash
+rm -f .git/index.lock
+git add .
+git commit -m "🔧 Fix Node.js version: Updated to 20.18.1 for Netlify compatibility"
+git push origin main
+```
+
+## Why This Fixes the Issue
+
+- **Node.js 20.18.1**: Meets the minimum requirement (>=20.18.1)
+- **Vite Compatibility**: Vite 6.3.5 works perfectly with Node.js 20.18.1
+- **Netlify Recognition**: Both netlify.toml and .nvmrc ensure Netlify uses correct version
+- **Build Success**: No more "vite: not found" or version compatibility errors
+
+## Expected Results
+
+✅ **Build Success**: Netlify will use Node.js 20.18.1
+✅ **Vite Works**: No more "vite: not found" errors
+✅ **Functions Deploy**: All API endpoints will work
+✅ **Full Functionality**: Complete gaming profile with live integrations
+
+The deployment will now succeed with Node.js 20.18.1.
