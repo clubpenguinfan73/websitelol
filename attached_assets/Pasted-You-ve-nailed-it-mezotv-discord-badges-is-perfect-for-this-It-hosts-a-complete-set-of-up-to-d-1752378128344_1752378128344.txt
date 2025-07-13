@@ -1,0 +1,132 @@
+You've nailed it—**mezotv/discord‑badges** is perfect for this! It hosts a **complete set of up‑to‑date SVG icons** for all Discord badges. Let’s integrate it properly so your site stops showing 404s 💥
+
+---
+
+## ✅ 1. Map badges to their icon URLs
+
+Using the assets in `assets/`, here’s a mapping you can use:
+
+```ts
+const BADGE_DATA = {
+  STAFF: {
+    bit: 1 << 0,
+    name: "Discord Staff",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordstaff.svg"
+  },
+  PARTNER: {
+    bit: 1 << 1,
+    name: "Nitro Booster / Partner",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordpartner.svg"
+  },
+  HYPESQUAD_EVENTS: {
+    bit: 1 << 2,
+    name: "HypeSquad Events",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadevents.svg"
+  },
+  BUG_HUNTER_LEVEL_1: {
+    bit: 1 << 3,
+    name: "Bug Hunter Level 1",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbughunter1.svg"
+  },
+  HOUSE_BRAVERY: {
+    bit: 1 << 6,
+    name: "HypeSquad Bravery",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadbravery.svg"
+  },
+  HOUSE_BRILLIANCE: {
+    bit: 1 << 7,
+    name: "HypeSquad Brilliance",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadbrilliance.svg"
+  },
+  HOUSE_BALANCE: {
+    bit: 1 << 8,
+    name: "HypeSquad Balance",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadbalance.svg"
+  },
+  EARLY_SUPPORTER: {
+    bit: 1 << 9,
+    name: "Early Supporter",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordearlysupporter.svg"
+  },
+  BUG_HUNTER_LEVEL_2: {
+    bit: 1 << 14,
+    name: "Bug Hunter Level 2",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbughunter2.svg"
+  },
+  VERIFIED_BOT_DEVELOPER: {
+    bit: 1 << 17,
+    name: "Verified Bot Developer",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbotdev.svg"
+  },
+  MODERATOR_PROGRAMS_ALUMNI: {
+    bit: 1 << 18,
+    name: "Moderator Alumni",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordmod.svg"
+  },
+  ACTIVE_DEVELOPER: {
+    bit: 1 << 22,
+    name: "Active Developer",
+    icon: "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/activedeveloper.svg"
+  },
+};
+```
+
+These correspond directly to the SVG files in `mezotv/discord-badges/assets/` ([github.com][1], [github.com][2], [github.com][3])
+
+---
+
+## ✅ 2. Detect user badges correctly from `public_flags`
+
+```ts
+function getUserBadges(publicFlags: number) {
+  return Object.values(BADGE_DATA)
+    .filter(b => (publicFlags & b.bit) === b.bit);
+}
+```
+
+---
+
+## ✅ 3. Render them in React or your frontend:
+
+```jsx
+const badges = getUserBadges(user.public_flags);
+
+return (
+  <div className="badge-container">
+    {badges.map(b => (
+      <img
+        key={b.name}
+        src={b.icon}
+        alt={b.name}
+        title={b.name}
+        style={{ width: 32, height: 32 }}
+      />
+    ))}
+  </div>
+);
+```
+
+---
+
+## ✅ 4. Verify with your developer tools:
+
+* Open your site → Console ⇒ Network tab
+* Reload → filter for `.svg` requests
+
+  * ✅ Should see `200 OK` for each badge file
+  * ❌ If you still see `404`, check the URL logged in the Network panel
+
+---
+
+### 📌 Summary
+
+* **Use mezotv's hosted SVGs** (they’re reliable and updated) ([github.com][4])
+* **Match badge keys exactly** to the filenames
+* **Decode `public_flags`** with bitwise logic and only render badges the user actually has
+
+Let me know if you'd like the ZIP of these SVGs or help integrating them directly into your repo’s `/public/badges/` folder!
+
+[1]: https://github.com/mezotv/discord-badges/blob/main/README.md?utm_source=chatgpt.com "discord-badges/README.md at main · mezotv/discord-badges · GitHub"
+[2]: https://github.com/mezotv/discord-badges/blob/main/assets/server/Staff.svg?utm_source=chatgpt.com "discord-badges/assets/server/Staff.svg at main · mezotv ... - GitHub"
+[3]: https://github.com/mezotv/discord-badges/discussions?utm_source=chatgpt.com "mezotv discord-badges · Discussions · GitHub"
+[4]: https://github.com/mezotv/discord-badges/blob/main/assets/discordstaff.svg?utm_source=chatgpt.com "discord-badges/assets/discordstaff.svg at main · mezotv ... - GitHub"

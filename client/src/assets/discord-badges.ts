@@ -125,40 +125,40 @@ export const getBadgesFromFlags = (publicFlags: number): string[] => {
     .map(([name]) => name);
 };
 
-// Discord Badge Icons - Using direct SVG rendering for reliable display
+// Discord Badge Icons - Using mezotv/discord-badges for correct SVG icons
 export const getBadgeIcon = (badgeName: string): string => {
-  // Official Discord badge SVG content mapped to both full names and snake_case
+  // Official Discord badge SVG URLs from mezotv/discord-badges repo
   const badgeIconURLs: { [key: string]: string } = {
     // Full names (from frontend)
-    "Discord Staff": discordBadges.staff,
-    "Discord Partner": discordBadges.partner, 
-    "HypeSquad Events": discordBadges.hypesquad_events,
-    "HypeSquad Bravery": discordBadges.hypesquad_bravery,
-    "HypeSquad Brilliance": discordBadges.hypesquad_brilliance, 
-    "HypeSquad Balance": discordBadges.hypesquad_balance,
-    "Bug Hunter Level 1": discordBadges.bug_hunter_level_1,
-    "Bug Hunter Level 2": discordBadges.bug_hunter_level_2,
-    "Early Supporter": discordBadges.early_supporter,
-    "Active Developer": discordBadges.active_developer,
-    "Verified Bot Developer": discordBadges.early_verified_bot_developer,
-    "Certified Moderator": discordBadges.discord_certified_moderator,
-    "Bot HTTP Interactions": discordBadges.bot_http_interactions,
+    "Discord Staff": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordstaff.svg",
+    "Discord Partner": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordpartner.svg", 
+    "HypeSquad Events": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadevents.svg",
+    "HypeSquad Bravery": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadbravery.svg",
+    "HypeSquad Brilliance": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadbrilliance.svg", 
+    "HypeSquad Balance": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadbalance.svg",
+    "Bug Hunter Level 1": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbughunter1.svg",
+    "Bug Hunter Level 2": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbughunter2.svg",
+    "Early Supporter": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordearlysupporter.svg",
+    "Active Developer": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/activedeveloper.svg",
+    "Verified Bot Developer": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbotdev.svg",
+    "Certified Moderator": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordmod.svg",
+    "Bot HTTP Interactions": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordstaff.svg",
     
     // Backend snake_case names (from API)
-    "discord_staff": discordBadges.staff,
-    "discord_partner": discordBadges.partner, 
-    "hypesquad_events": discordBadges.hypesquad_events,
-    "hypesquad_bravery": discordBadges.hypesquad_bravery,
-    "hypesquad_brilliance": discordBadges.hypesquad_brilliance, 
-    "hypesquad_balance": discordBadges.hypesquad_balance,
-    "bug_hunter_level_1": discordBadges.bug_hunter_level_1,
-    "bug_hunter_level_2": discordBadges.bug_hunter_level_2,
-    "early_supporter": discordBadges.early_supporter,
-    "active_developer": discordBadges.active_developer,
-    "verified_developer": discordBadges.early_verified_bot_developer,
-    "moderator_alumni": discordBadges.discord_certified_moderator,
-    "bot_http_interactions": discordBadges.bot_http_interactions
+    "discord_staff": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordstaff.svg",
+    "discord_partner": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordpartner.svg", 
+    "hypesquad_events": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadevents.svg",
+    "hypesquad_bravery": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadbravery.svg",
+    "hypesquad_brilliance": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadbrilliance.svg", 
+    "hypesquad_balance": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/hypesquadbalance.svg",
+    "bug_hunter_level_1": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbughunter1.svg",
+    "bug_hunter_level_2": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbughunter2.svg",
+    "early_supporter": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordearlysupporter.svg",
+    "active_developer": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/activedeveloper.svg",
+    "verified_developer": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordbotdev.svg",
+    "moderator_alumni": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordmod.svg",
+    "bot_http_interactions": "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordstaff.svg"
   };
   
-  return badgeIconURLs[badgeName] || discordBadges.early_supporter;
+  return badgeIconURLs[badgeName] || "https://raw.githubusercontent.com/mezotv/discord-badges/main/assets/discordearlysupporter.svg";
 };

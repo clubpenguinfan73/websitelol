@@ -331,19 +331,21 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
                           console.log(`Rendering badge: ${badge}`);
                           return (
                             <div key={index} className="w-5 h-5 flex items-center justify-center" title={badge}>
-                              <div 
-                                className="w-5 h-5 flex items-center justify-center"
+                              <img 
+                                src={getBadgeIcon(badge)}
+                                alt={badge}
+                                title={badge}
+                                className="w-5 h-5"
                                 style={{ 
                                   width: '20px', 
                                   height: '20px',
                                   minWidth: '20px',
                                   minHeight: '20px'
                                 }}
-                                dangerouslySetInnerHTML={{ 
-                                  __html: getBadgeIcon(badge)
-                                    .replace('<svg', '<svg width="20" height="20" viewBox="0 0 24 24"')
-                                    .replace(/width="[^"]*"/g, 'width="20"')
-                                    .replace(/height="[^"]*"/g, 'height="20"')
+                                onError={(e) => {
+                                  console.log(`Failed to load badge: ${badge}`);
+                                  // Hide failed badges rather than show broken images
+                                  (e.target as HTMLImageElement).style.display = 'none';
                                 }}
                               />
                             </div>
