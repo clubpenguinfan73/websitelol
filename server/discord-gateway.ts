@@ -153,8 +153,7 @@ class DiscordGateway {
         activity.type === 4 // Custom status
       );
 
-      // Debug logging to understand the structure
-      console.log('Discord Gateway: Raw activities:', JSON.stringify(presence.activities, null, 2));
+
 
       // Update database with new activity data
       await db.update(profiles)
