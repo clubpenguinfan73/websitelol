@@ -184,11 +184,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Discord activity endpoint
+  // Discord activity endpoint - real-time activity tracking
   app.get("/api/discord/activity", async (req, res) => {
     try {
       const activity = await discordAPI.getCurrentActivity();
-      res.json(activity);
+      
+      if (activity) {
+        // Format the activity for better display
+        const formattedActivity = {
+          name: activity.name,
+          type: activity.type,
+          details: activity.details,
+          state: activity.state,
+          timestamps: activity.timestamps,
+          assets: activity.assets,
+          // Add human-readable type
+          typeText: activity.type === 0 ? 'Playing' : 
+                   activity.type === 1 ? 'Streaming' : 
+                   activity.type === 2 ? 'Listening to' : 
+                   activity.type === 3 ? 'Watching' : 
+                   activity.type === 5 ? 'Competing in' : 'Activity',
+          // Calculate elapsed time if timestamps exist
+          elapsedTime: activity.timestamps?.start ? 
+            Math.floor((Date.now() - activity.timestamps.start) / 1000) : null
+        };
+        
+        res.json(formattedActivity);
+      } else {
+        res.json(null);
+      }
     } catch (error) {
       console.error('Discord activity error:', error);
       res.status(500).json({ message: "Failed to fetch Discord activity" });

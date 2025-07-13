@@ -87,18 +87,28 @@ class DiscordAPI {
     try {
       this.client = new Client({
         intents: [
-          GatewayIntentBits.Guilds
+          GatewayIntentBits.Guilds,
+          GatewayIntentBits.GuildPresences,
+          GatewayIntentBits.GuildMembers
         ]
       });
 
       this.client.on('ready', () => {
         console.log(`Discord bot logged in as ${this.client?.user?.tag}`);
+        console.log(`Bot is in ${this.client?.guilds.cache.size} guilds`);
         this.startActivityTracking();
       });
 
-      this.client.on('presenceUpdate', (oldPresence, newPresence) => {
-        // Activity tracking would need specific user ID
-        this.updateActivity(newPresence);
+      this.client.on('presenceUpdate', async (oldPresence, newPresence) => {
+        // Only track activity for the configured user
+        const storage = await import('./storage.js');
+        const profile = await storage.default.getProfile(1);
+        const userId = profile?.discordUserId;
+        
+        if (newPresence?.userId === userId) {
+          console.log(`Real-time activity update for user ${userId}`);
+          this.updateActivity(newPresence);
+        }
       });
 
       if (this.botToken) {
@@ -115,23 +125,36 @@ class DiscordAPI {
     // Check activity immediately
     this.checkUserActivity();
     
-    // Then check every 15 seconds for more real-time updates
+    // Then check every 10 seconds for more real-time updates
     setInterval(() => {
       this.checkUserActivity();
-    }, 15000);
+    }, 10000);
   }
 
   private async checkUserActivity() {
     if (!this.client) return;
     
     try {
-      const user = await this.client.users.fetch(this.targetUserId);
+      // Get the user ID from database dynamically
+      const storage = await import('./storage.js');
+      const profile = await storage.default.getProfile(1);
+      const userId = profile?.discordUserId;
+      
+      if (!userId) {
+        console.log('No Discord User ID configured for activity tracking');
+        return;
+      }
+      
+      const user = await this.client.users.fetch(userId);
       const presence = this.client.guilds.cache
-        .map(guild => guild.presences.cache.get(this.targetUserId))
+        .map(guild => guild.presences.cache.get(userId))
         .find(p => p);
 
       if (presence) {
         this.updateActivity(presence);
+        console.log(`Activity tracked for ${user.username}: ${presence.activities.length} activities`);
+      } else {
+        console.log(`No presence data found for ${user.username}`);
       }
     } catch (error) {
       console.error('Error checking user activity:', error);
@@ -141,6 +164,7 @@ class DiscordAPI {
   private updateActivity(presence: any) {
     if (!presence?.activities?.length) {
       this.currentActivity = null;
+      console.log('No activities found, clearing current activity');
       return;
     }
 
@@ -158,11 +182,13 @@ class DiscordAPI {
     
     if (musicActivity) {
       selectedActivity = musicActivity;
+      console.log(`Found music activity: ${selectedActivity.name} - ${selectedActivity.details} by ${selectedActivity.state}`);
     } else {
       // Otherwise, find game activity
       const gameActivity = presence.activities.find((act: any) => act.type === 0); // PLAYING activity type
       if (gameActivity) {
         selectedActivity = gameActivity;
+        console.log(`Found game activity: ${selectedActivity.name} - ${selectedActivity.details}`);
       }
     }
 
