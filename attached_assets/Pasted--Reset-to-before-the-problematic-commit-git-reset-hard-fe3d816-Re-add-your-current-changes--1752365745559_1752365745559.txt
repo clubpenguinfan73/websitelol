@@ -1,0 +1,48 @@
+# Reset to before the problematic commit
+git reset --hard fe3d816
+
+# Re-add your current changes
+git add .
+git commit -m "Update Discord widget with proper badge system and secure tokens"
+
+# Force push to overwrite the history
+git push --force origin main
+HEAD is now at fe3d816 Enhance social presence by displaying current Spotify song data
+On branch main
+Your branch is ahead of 'origin/main' by 2 commits.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+Enumerating objects: 29, done.
+Counting objects: 100% (29/29), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (18/18), done.
+Writing objects: 100% (19/19), 201.80 KiB | 22.42 MiB/s, done.
+Total 19 (delta 11), reused 0 (delta 0), pack-reused 0 (from 0)
+remote: Resolving deltas: 100% (11/11), completed with 9 local objects.
+remote: error: GH013: Repository rule violations found for refs/heads/main.
+remote: 
+remote: - GITHUB PUSH PROTECTION
+remote:   —————————————————————————————————————————
+remote:     Resolve the following violations before pushing again
+remote: 
+remote:     - Push cannot contain secrets
+remote: 
+remote:     
+remote:      (?) Learn how to resolve a blocked push
+remote:      https://docs.github.com/code-security/secret-scanning/working-with-secret-scanning-and-push-protection/working-with-push-protection-from-the-command-line#resolving-a-blocked-push
+remote:     
+remote:     
+remote:       —— Discord Bot Token —————————————————————————————————
+remote:        locations:
+remote:          - commit: b9be4c32731e613e8dec456e6c1b8328864d8b12
+remote:            path: COMPLETE_DISCORD_OAUTH_DEPLOYMENT.md:24
+remote:     
+remote:        (?) To push, remove secret from commit(s) or follow this URL to allow the secret.
+remote:        https://github.com/clubpenguinfan73/websitelol/security/secret-scanning/unblock-secret/2znSRQcY0LAhmPJm2lme88eGZWx
+remote:     
+remote: 
+remote: 
+To https://github.com/clubpenguinfan73/websitelol.git
+ ! [remote rejected] main -> main (push declined due to repository rule violations)
+error: failed to push some refs to 'https://github.com/clubpenguinfan73/websitelol.git'
