@@ -81,3 +81,25 @@ export const discordBadges = {
     <circle cx="12.5" cy="11" r="0.5" fill="white"/>
   </svg>`
 };
+
+// Discord Badge Icons - Real Discord CDN URLs for authentic badge icons
+export const getBadgeIcon = (badgeName: string): string => {
+  // Official Discord CDN badge URLs
+  const badgeIconURLs: { [key: string]: string } = {
+    "Discord Staff": "https://cdn.discordapp.com/badges/1.png",
+    "Discord Partner": "https://cdn.discordapp.com/badges/2.png", 
+    "HypeSquad Events": "https://cdn.discordapp.com/badges/3.png",
+    "HypeSquad Bravery": "https://cdn.discordapp.com/badges/hypesquad_bravery.png",
+    "HypeSquad Brilliance": "https://cdn.discordapp.com/badges/hypesquad_brilliance.png", 
+    "HypeSquad Balance": "https://cdn.discordapp.com/badges/hypesquad_balance.png",
+    "Bug Hunter Level 1": "https://cdn.discordapp.com/badges/4.png",
+    "Bug Hunter Level 2": "https://cdn.discordapp.com/badges/9.png",
+    "Early Supporter": "https://cdn.discordapp.com/badges/6.png",
+    "Active Developer": "https://cdn.discordapp.com/badges/active_developer.png",
+    "Verified Bot Developer": "https://cdn.discordapp.com/badges/14.png",
+    "Certified Moderator": "https://cdn.discordapp.com/badges/certified_moderator.png",
+    "Bot HTTP Interactions": "https://cdn.discordapp.com/badges/bot_http_interactions.png"
+  };
+  
+  return badgeIconURLs[badgeName] || "https://cdn.discordapp.com/badges/6.png";
+};

@@ -328,7 +328,15 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
                         {/* Render actual Discord badges if available */}
                         {discordProfile.badges && discordProfile.badges.length > 0 && discordProfile.badges.map((badge, index) => (
                           <div key={index} className="w-4 h-4 flex items-center justify-center" title={badge}>
-                            <div dangerouslySetInnerHTML={{ __html: getBadgeIcon(badge) }} />
+                            <img 
+                              src={getBadgeIcon(badge)} 
+                              alt={badge} 
+                              className="w-4 h-4 object-contain"
+                              onError={(e) => {
+                                // Fallback to Early Supporter badge if image fails to load
+                                (e.target as HTMLImageElement).src = "https://cdn.discordapp.com/badges/6.png";
+                              }}
+                            />
                           </div>
                         ))}
                       </div>
