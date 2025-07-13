@@ -121,53 +121,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log('Using Discord User ID from database:', discordUserId);
-      // Force use of fallback data to show all badges - Discord API only returns partial data
-      throw new Error('Using fallback data for complete badge display');
-    } catch (error) {
-      console.log('Discord API error caught in route handler, using fallback profile data');
-      // Return fallback profile data with proper formatting
-      // Based on Discord profile: https://discordapp.com/users/142694270405574657
-      // User has 4 badges: Early Supporter, HypeSquad Events, Bug Hunter Level 1, Active Developer
-      // Plus the new evolving Nitro badge (not in public_flags yet)
-      const fallbackUser = {
-        id: "142694270405574657",
-        username: "clubpenguinfan73",
-        discriminator: "0",
-        avatar: "db5d334e369b55874ab78bdddac83137",
-        banner: null,
-        accent_color: 2303016,
-        // Calculate combined public_flags for multiple badges:
-        // Early Supporter (512) + HypeSquad Balance (256) + Bug Hunter Level 2 (16384)
-        public_flags: 512 + 256 + 16384, // = 17152
-        premium_type: 2, // Nitro
-        flags: 512 + 256 + 16384,
-        global_name: "Catrina",
-        banner_color: "#232428",
-        clan: {
-          identity_guild_id: "1199216954733510747",
-          identity_enabled: true,
-          tag: ":c",
-          badge: "ea76d37bcd6f1b0543efcce6c32fe999"
-        }
-      };
       
-      const avatarUrl = discordAPI.getAvatarUrl(fallbackUser as any);
-      const bannerUrl = discordAPI.getBannerUrl(fallbackUser as any);
-      const badges = discordAPI.getBadges(fallbackUser.public_flags);
+      // Try to fetch user data from Discord API
+      const userData = await discordAPI.getUserById(discordUserId);
       
-
+      if (!userData) {
+        console.log('Failed to fetch from Discord API, returning minimal data');
+        return res.json({
+          id: discordUserId,
+          username: 'Discord User',
+          discriminator: '0000',
+          avatar: 'https://cdn.discordapp.com/embed/avatars/0.png',
+          banner: null,
+          accentColor: null,
+          badges: [],
+          premiumType: null,
+          publicFlags: 0
+        });
+      }
+      
+      console.log('Successfully fetched Discord user data');
+      const avatarUrl = discordAPI.getAvatarUrl(userData);
+      const bannerUrl = discordAPI.getBannerUrl(userData);
+      const badges = discordAPI.getBadges(userData.public_flags, userData.premium_type);
+      
+      console.log('Discord user badges:', badges);
+      console.log('Public flags:', userData.public_flags);
+      console.log('Premium type:', userData.premium_type);
       
       res.json({
-        id: fallbackUser.id,
-        username: fallbackUser.username,
-        discriminator: fallbackUser.discriminator,
+        id: userData.id,
+        username: userData.username,
+        discriminator: userData.discriminator,
         avatar: avatarUrl,
         banner: bannerUrl,
-        accentColor: fallbackUser.accent_color,
+        accentColor: userData.accent_color,
         badges: badges,
-        premiumType: fallbackUser.premium_type,
-        publicFlags: fallbackUser.public_flags
+        premiumType: userData.premium_type,
+        publicFlags: userData.public_flags
       });
+    } catch (error) {
+      console.error('Discord API error:', error);
+      res.status(500).json({ message: "Failed to fetch Discord profile" });
     }
   });
 

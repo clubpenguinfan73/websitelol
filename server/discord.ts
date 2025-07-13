@@ -294,27 +294,62 @@ class DiscordAPI {
     };
 
     // Check for each badge using bitwise AND operation
-    if (publicFlags & UserFlags.STAFF) badges.push('discord_staff');
-    if (publicFlags & UserFlags.PARTNER) badges.push('discord_partner');
-    if (publicFlags & UserFlags.HYPESQUAD) badges.push('hypesquad_events');
-    if (publicFlags & UserFlags.BUG_HUNTER_LEVEL_1) badges.push('bug_hunter_level_1');
-    if (publicFlags & UserFlags.HYPESQUAD_ONLINE_HOUSE_1) badges.push('hypesquad_bravery');
-    if (publicFlags & UserFlags.HYPESQUAD_ONLINE_HOUSE_2) badges.push('hypesquad_brilliance');
-    if (publicFlags & UserFlags.HYPESQUAD_ONLINE_HOUSE_3) badges.push('hypesquad_balance');
-    if (publicFlags & UserFlags.PREMIUM_EARLY_SUPPORTER) badges.push('early_supporter');
-    if (publicFlags & UserFlags.BUG_HUNTER_LEVEL_2) badges.push('bug_hunter_level_2');
-    if (publicFlags & UserFlags.VERIFIED_DEVELOPER) badges.push('verified_developer');
-    if (publicFlags & UserFlags.CERTIFIED_MODERATOR) badges.push('moderator_alumni');
-    if (publicFlags & UserFlags.ACTIVE_DEVELOPER) badges.push('active_developer');
+    if (publicFlags & UserFlags.STAFF) badges.push('Discord Staff');
+    if (publicFlags & UserFlags.PARTNER) badges.push('Discord Partner');
+    if (publicFlags & UserFlags.HYPESQUAD) badges.push('HypeSquad Events');
+    if (publicFlags & UserFlags.BUG_HUNTER_LEVEL_1) badges.push('Bug Hunter Level 1');
+    if (publicFlags & UserFlags.HYPESQUAD_ONLINE_HOUSE_1) badges.push('HypeSquad Bravery');
+    if (publicFlags & UserFlags.HYPESQUAD_ONLINE_HOUSE_2) badges.push('HypeSquad Brilliance');
+    if (publicFlags & UserFlags.HYPESQUAD_ONLINE_HOUSE_3) badges.push('HypeSquad Balance');
+    if (publicFlags & UserFlags.PREMIUM_EARLY_SUPPORTER) badges.push('Early Supporter');
+    if (publicFlags & UserFlags.BUG_HUNTER_LEVEL_2) badges.push('Bug Hunter Level 2');
+    if (publicFlags & UserFlags.VERIFIED_DEVELOPER) badges.push('Verified Bot Developer');
+    if (publicFlags & UserFlags.CERTIFIED_MODERATOR) badges.push('Certified Moderator');
+    if (publicFlags & UserFlags.ACTIVE_DEVELOPER) badges.push('Active Developer');
 
     // Handle Nitro badges separately (not in public_flags)
     if (premiumType) {
-      if (premiumType === 2) badges.push('discord_nitro_full');
-      else if (premiumType === 1) badges.push('discord_nitro_classic');
-      else if (premiumType === 3) badges.push('discord_nitro_basic');
+      if (premiumType === 2) badges.push('Nitro');
+      else if (premiumType === 1) badges.push('Nitro Classic');
+      else if (premiumType === 3) badges.push('Nitro Basic');
     }
 
     return badges;
+  }
+
+  // Add method to get user from Discord API
+  async getUserById(userId: string): Promise<DiscordUser | null> {
+    try {
+      const response = await fetch(`https://discord.com/api/v10/users/${userId}`, {
+        headers: {
+          'Authorization': `Bot ${this.botToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.error(`Discord API error: ${response.status} ${response.statusText}`);
+        return null;
+      }
+
+      const userData = await response.json() as any;
+      console.log('Discord API response for user:', JSON.stringify(userData, null, 2));
+      
+      return {
+        id: userData.id,
+        username: userData.username,
+        discriminator: userData.discriminator || '0',
+        avatar: userData.avatar,
+        banner: userData.banner,
+        accent_color: userData.accent_color,
+        public_flags: userData.public_flags || 0,
+        premium_type: userData.premium_type || 0,
+        flags: userData.flags || userData.public_flags || 0
+      };
+    } catch (error) {
+      console.error('Error fetching Discord user:', error);
+      return null;
+    }
   }
 
   getStatusColor(status: string): string {
