@@ -1,9 +1,7 @@
 [build]
-  publish = "dist/public"
   command = "npm install && npx vite build && mkdir -p dist/functions && npx esbuild netlify/functions/mongo-api.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/functions/api.js"
-
-[build.environment]
-  NODE_VERSION = "20.19.0"
+  publish = "dist/public"
+  environment = { NODE_VERSION = "20.19.0" }
 
 [[headers]]
   for = "/*"
@@ -35,7 +33,6 @@
   status = 200
 
 [functions]
-  directory = "dist/functions"
   node_bundler = "esbuild"
   
 [build.processing]
