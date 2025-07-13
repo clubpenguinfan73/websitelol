@@ -1,0 +1,79 @@
+That `500 Internal Server Error` means something’s going wrong inside your Netlify function at this endpoint:
+
+```
+https://renegaderaider.wtf/.netlify/functions/api/discord/profile
+```
+
+---
+
+### Here's how to troubleshoot and fix it:
+
+---
+
+## 1. Check your Netlify function logs
+
+* Go to your Netlify dashboard → Site → Functions → Logs
+* Look for error messages or stack traces for the `api/discord/profile` function
+* The logs usually tell you exactly what’s causing the error (e.g., missing environment variable, bad API call, code exception)
+
+---
+
+## 2. Common causes for 500 in Discord API functions:
+
+* **Missing or incorrect Discord Bot Token or Client Secret in environment variables**
+* **Invalid or missing access token when calling Discord API**
+* **API call quota exceeded or malformed request**
+* **Code exceptions (e.g., trying to parse undefined response)**
+* **Network or permission issues**
+
+---
+
+## 3. Quick local debug tips
+
+If you can run your function locally (Netlify CLI or similar), do this:
+
+```bash
+netlify dev
+```
+
+Then trigger the `/api/discord/profile` endpoint and watch for errors in the console.
+
+---
+
+## 4. Check your code for `/api/discord/profile`
+
+Make sure you:
+
+* Are properly reading tokens/credentials from environment variables (no typos)
+* Are handling API call failures with try/catch
+* Log errors internally to diagnose
+
+---
+
+### Example minimal error handling:
+
+```js
+exports.handler = async function(event, context) {
+  try {
+    const token = process.env.DISCORD_BOT_TOKEN;
+    if (!token) throw new Error('Discord bot token missing');
+
+    // ... your API call logic here
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ /* user profile data */ }),
+    };
+  } catch (error) {
+    console.error('Discord profile fetch error:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: 'Internal Server Error' }),
+    };
+  }
+};
+```
+
+---
+
+If you share the relevant part of your `/api/discord/profile` function code or logs, I can help pinpoint the exact issue!
