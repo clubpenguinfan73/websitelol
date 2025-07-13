@@ -232,5 +232,11 @@ To set up Netlify DB for your deployment:
   - Added explicit file extension validation for .gif files alongside MIME type checking
   - Improved file input accept attributes to explicitly list all supported formats
   - Added proper error handling for file reading failures with user-friendly toast notifications
+- **July 13, 2025**: CRITICAL ADMIN PANEL PERSISTENCE FIX:
+  - FIXED: Live site admin panel changes not persisting due to incorrect Netlify function
+  - PROBLEM: API endpoints returning HTML instead of JSON because netlify.toml was using api-fixed.ts (static data) instead of mongo-api.ts (database integration)
+  - SOLUTION: Updated netlify.toml build command to use mongo-api.ts function with proper MongoDB Atlas integration
+  - RESULT: Admin panel changes now save permanently to database, all profile updates persist across refreshes
+  - VERIFIED: All admin panel functionality (profile updates, link management, settings) now work correctly on live site
 
 The application is designed to be easily deployable to Netlify with automatic database provisioning and serverless architecture.
