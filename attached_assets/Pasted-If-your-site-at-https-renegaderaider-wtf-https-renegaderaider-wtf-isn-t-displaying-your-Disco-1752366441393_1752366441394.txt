@@ -1,0 +1,73 @@
+If your site at [https://renegaderaider.wtf](https://renegaderaider.wtf) isn't displaying your Discord profile after logging in via OAuth2, here are some steps and checks to troubleshoot:
+
+---
+
+### 1. Confirm OAuth2 flow is working end-to-end
+
+* When you visit your OAuth2 URL and authorize, you should be redirected to:
+  `https://renegaderaider.wtf/discord/callback?code=...`
+
+* Your backend must **exchange the `code` for an access token** by calling Discord’s token endpoint:
+
+```http
+POST https://discord.com/api/oauth2/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id=YOUR_CLIENT_ID&
+client_secret=YOUR_CLIENT_SECRET&
+grant_type=authorization_code&
+code=CODE_FROM_CALLBACK&
+redirect_uri=https://renegaderaider.wtf/discord/callback
+```
+
+* Then use the access token to call Discord API `/users/@me` to get your user profile.
+
+---
+
+### 2. Check your backend `/discord/callback` handler
+
+* Is it correctly receiving the `code` param?
+* Is it exchanging the code for a valid access token?
+* Are you storing or returning the user data correctly for the frontend to display?
+
+---
+
+### 3. Check browser console and network tab
+
+* Are there any errors (like 401 Unauthorized) when your frontend requests your backend API for the user profile?
+* Is the profile API endpoint returning data or an error?
+
+---
+
+### 4. Verify your registered Redirect URI
+
+* It must be exactly `https://renegaderaider.wtf/discord/callback` in your Discord developer portal under OAuth2.
+
+---
+
+### 5. Verify you’re properly passing the OAuth2 access token on API calls
+
+* Discord API `/users/@me` requires `Authorization: Bearer <access_token>` header.
+
+---
+
+### 6. Double-check your Discord user ID for correctness
+
+* Your user ID: `142694270405574657`
+* You can test with [Discord ID lookup](https://discord.id/)
+
+---
+
+### 7. Testing manual API call example:
+
+Try this in your terminal with a valid access token (replace `YOUR_ACCESS_TOKEN`):
+
+```bash
+curl -H "Authorization: Bearer YOUR_ACCESS_TOKEN" https://discord.com/api/users/@me
+```
+
+You should get your user profile JSON.
+
+---
+
+If you want, you can share the relevant parts of your backend callback code or the frontend API request, and I can help pinpoint where it might be breaking!

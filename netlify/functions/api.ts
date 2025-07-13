@@ -713,7 +713,7 @@ export const handler: Handler = async (event, context) => {
           
           // Discord OAuth2 configuration
           const CLIENT_ID = process.env.DISCORD_CLIENT_ID || '1393354181536120966';
-          const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || 'DVCv0_dyChk8XGjfVKHTxMy5rOgi4EG2';
+          const CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || '';
           const REDIRECT_URI = 'https://renegaderaider.wtf/discord/callback';
 
           console.log('Using Discord OAuth config:', {
