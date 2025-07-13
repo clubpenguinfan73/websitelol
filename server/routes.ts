@@ -105,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('Discord API success, returning profile data');
       const avatarUrl = discordAPI.getAvatarUrl(user);
       const bannerUrl = discordAPI.getBannerUrl(user);
-      const badges = discordAPI.getBadges(user.public_flags);
+      const badges = discordAPI.getBadges(user.public_flags, user.premium_type);
       
       res.json({
         id: user.id,

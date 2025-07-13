@@ -1,0 +1,119 @@
+You're asking for the official way to detect and display Discord badges on your website\! This is exactly what we need to tackle the "Discord badges not showing" issue.
+
+Discord provides a way to get user flags (which represent most of the badges) through their **User Resource API**. When you fetch a user's profile, the response includes a `public_flags` field (and sometimes a `flags` field, though `public_flags` is generally what you want for display).
+
+This `public_flags` field is an **integer bitfield**. This means that different badges correspond to different powers of 2, and the `public_flags` value is the sum of all the active badge flags.
+
+### Discord User Flags (Badges) and their Corresponding Values
+
+Here's a comprehensive list of common Discord user flags (badges) you'd typically want to display, along with their integer values (which are powers of 2):
+
+| Value (Decimal) | Flag Name (Constant)       | Description                                  | Obtainable? | Notes                                                                                                                                                                                                                                                                                                                                        |
+| :-------------- | :------------------------- | :------------------------------------------- | :---------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `1` (2^0)       | `STAFF`                    | Discord Employee                             | ✅          | Only for Discord Staff                                                                                                                                                                                                                                                                                                                               |
+| `2` (2^1)       | `PARTNER`                  | Partnered Server Owner                       | ❌          | Was for owners of partnered servers (Badge phased out for new partners, but existing ones keep it)                                                                                                                                                                                                                                              |
+| `4` (2^2)       | `HYPESQUAD`                | HypeSquad Events Member                      | ❌          | Discontinued/No longer obtainable                                                                                                                                                                                                                                                                                                                      |
+| `8` (2^3)       | `BUG_HUNTER_LEVEL_1`       | Bug Hunter Level 1                           | ✅          | Reported bugs in Discord Testers                                                                                                                                                                                                                                                                                                                     |
+| `64` (2^6)      | `HYPESQUAD_ONLINE_HOUSE_1` | HypeSquad Bravery House                      | ✅          | From HypeSquad test                                                                                                                                                                                                                                                                                                                                  |
+| `128` (2^7)     | `HYPESQUAD_ONLINE_HOUSE_2` | HypeSquad Brilliance House                   | ✅          | From HypeSquad test                                                                                                                                                                                                                                                                                                                                  |
+| `256` (2^8)     | `HYPESQUAD_ONLINE_HOUSE_3` | HypeSquad Balance House                      | ✅          | From HypeSquad test                                                                                                                                                                                                                                                                                                                                  |
+| `512` (2^9)     | `PREMIUM_EARLY_SUPPORTER`  | Early Nitro Supporter                        | ❌          | For users who had Nitro before a certain date (Oct 10, 2018)                                                                                                                                                                                                                                                                                         |
+| `16384` (2^14)  | `BUG_HUNTER_LEVEL_2`       | Bug Hunter Level 2 (Golden Bug Hunter)       | ✅          | Advanced tier of Bug Hunter                                                                                                                                                                                                                                                                                                                          |
+| `131072` (2^17) | `VERIFIED_DEVELOPER`       | Early Verified Bot Developer                 | ❌          | For verified bot developers before Aug 19, 2020                                                                                                                                                                                                                                                                                                      |
+| `262144` (2^18) | `CERTIFIED_MODERATOR`      | Moderator Programs Alumni                    | ❌          | Discontinued after Dec 1, 2022                                                                                                                                                                                                                                                                                                                       |
+| `4194304` (2^22) | `ACTIVE_DEVELOPER`         | User is an Active Developer (Badge)          | ✅          | Owns at least one active application with a command executed in the last 30 days. **This is one you likely want for yourself.** |
+
+**Important Notes:**
+
+  * **Nitro Badge & Server Booster Badge:** These are *not* part of the `public_flags` bitfield. They are indicated by the `premium_type` field and `avatar_decoration_data` / `collectibles` in the User object. You'll need separate logic for these.
+      * `premium_type`: `0` (None), `1` (Nitro Classic), `2` (Nitro), `3` (Nitro Basic).
+      * Server Booster: This information is usually accessed through `guild_member` objects or specific API calls related to server boosting, not directly from the `public_flags` of the *user* object unless the API provides a direct flag for it (which it typically doesn't for the *user* object's public flags). Your bot would usually fetch guild member data to determine if someone is boosting a specific server.
+  * **API Source:** The definitive source for these flags is the **Discord Developer Portal User Resource documentation** (specifically the "User Flags" section). The values are given as `1 << N` (where N is the bit position), which translates to `2^N`.
+      * [Discord Developer Portal - User Resource](https://www.google.com/search?q=https://discord.com/developers/docs/resources/user%23user-object-user-flags)
+
+### How to Implement This on Your Website:
+
+Your backend (Netlify function) should:
+
+1.  Fetch the user's data using the Discord API (e.g., `GET /users/{user.id}`).
+2.  Parse the `public_flags` integer from the response.
+3.  Check for each badge by performing a bitwise AND operation.
+
+**Example Backend Logic (in your Netlify Function that fetches user data):**
+
+```typescript
+// Assuming you have the 'discord-api-types' or similar library,
+// or just define these constants yourself
+const UserFlags = {
+    STAFF: 1 << 0, // 1
+    PARTNER: 1 << 1, // 2
+    HYPESQUAD: 1 << 2, // 4
+    BUG_HUNTER_LEVEL_1: 1 << 3, // 8
+    HYPESQUAD_ONLINE_HOUSE_1: 1 << 6, // 64 (Bravery)
+    HYPESQUAD_ONLINE_HOUSE_2: 1 << 7, // 128 (Brilliance)
+    HYPESQUAD_ONLINE_HOUSE_3: 1 << 8, // 256 (Balance)
+    PREMIUM_EARLY_SUPPORTER: 1 << 9, // 512
+    BUG_HUNTER_LEVEL_2: 1 << 14, // 16384 (Golden)
+    VERIFIED_DEVELOPER: 1 << 17, // 131072
+    CERTIFIED_MODERATOR: 1 << 18, // 262144
+    ACTIVE_DEVELOPER: 1 << 22, // 4194304
+    // ... add more as needed from Discord docs
+};
+
+async function getDiscordBadges(userId: string, botToken: string) {
+    try {
+        const response = await fetch(`https://discord.com/api/v10/users/${userId}`, {
+            headers: {
+                Authorization: `Bot ${botToken}`,
+            },
+        });
+
+        if (!response.ok) {
+            // Handle API errors (e.g., user not found, invalid token)
+            console.error(`Error fetching Discord user ${userId}:`, response.status, response.statusText);
+            const errorData = await response.json();
+            console.error('Discord API Error:', errorData);
+            return { error: true, message: `Failed to fetch Discord user: ${response.statusText}` };
+        }
+
+        const userData = await response.json();
+        const flags = userData.public_flags; // Use public_flags for general display
+
+        const badges = [];
+
+        // Check for each badge using bitwise AND
+        if (flags & UserFlags.STAFF) badges.push('discord_staff');
+        if (flags & UserFlags.PARTNER) badges.push('discord_partner');
+        if (flags & UserFlags.HYPESQUAD) badges.push('hypesquad_events');
+        if (flags & UserFlags.BUG_HUNTER_LEVEL_1) badges.push('bug_hunter_level_1');
+        if (flags & UserFlags.HYPESQUAD_ONLINE_HOUSE_1) badges.push('hypesquad_bravery');
+        if (flags & UserFlags.HYPESQUAD_ONLINE_HOUSE_2) badges.push('hypesquad_brilliance');
+        if (flags & UserFlags.HYPESQUAD_ONLINE_HOUSE_3) badges.push('hypesquad_balance');
+        if (flags & UserFlags.PREMIUM_EARLY_SUPPORTER) badges.push('early_supporter');
+        if (flags & UserFlags.BUG_HUNTER_LEVEL_2) badges.push('bug_hunter_level_2');
+        if (flags & UserFlags.VERIFIED_DEVELOPER) badges.push('verified_developer');
+        if (flags & UserFlags.CERTIFIED_MODERATOR) badges.push('moderator_alumni');
+        if (flags & UserFlags.ACTIVE_DEVELOPER) badges.push('active_developer');
+
+        // Handle Nitro separately
+        if (userData.premium_type) {
+            // premium_type: 1 = Nitro Classic, 2 = Nitro, 3 = Nitro Basic
+            // You might want to map these to different badge names or just a generic 'nitro'
+            if (userData.premium_type === 2) badges.push('discord_nitro_full');
+            else if (userData.premium_type === 1) badges.push('discord_nitro_classic');
+            else if (userData.premium_type === 3) badges.push('discord_nitro_basic');
+        }
+
+        // Return the array of badge names (strings) to your frontend
+        return { badges };
+
+    } catch (error) {
+        console.error('Error in getDiscordBadges:', error);
+        return { error: true, message: 'Server error fetching Discord badges.' };
+    }
+}
+```
+
+Your frontend would then receive this array of badge names (e.g., `['active_developer', 'hypesquad_bravery']`) and render the corresponding badge images.
+
+This approach gives you precise control over which badges to display and how to style them. Remember to ensure your Discord Bot Token is secure (via Netlify Environment Variables) and that your bot has the `identify` OAuth2 scope to fetch user details.

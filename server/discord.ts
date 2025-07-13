@@ -243,55 +243,49 @@ class DiscordAPI {
     return `https://cdn.discordapp.com/banners/${user.id}/${user.banner}.${format}?size=${size}`;
   }
 
-  getBadges(publicFlags: number): string[] {
+  getBadges(publicFlags: number, premiumType?: number): string[] {
     const badges: string[] = [];
     
-    // Discord Public Flags with complete mappings
-    const FLAGS = {
-      DISCORD_EMPLOYEE: 1 << 0,
-      PARTNERED_SERVER_OWNER: 1 << 1,
-      HYPESQUAD_EVENTS: 1 << 2,
-      BUG_HUNTER_LEVEL_1: 1 << 3,
-      HOUSE_BRAVERY: 1 << 6,
-      HOUSE_BRILLIANCE: 1 << 7,
-      HOUSE_BALANCE: 1 << 8,
-      EARLY_SUPPORTER: 1 << 9,
-      TEAM_USER: 1 << 10,
-      BUG_HUNTER_LEVEL_2: 1 << 14,
-      VERIFIED_BOT: 1 << 16,
-      VERIFIED_DEVELOPER: 1 << 17,
-      CERTIFIED_MODERATOR: 1 << 18,
-      BOT_HTTP_INTERACTIONS: 1 << 19,
-      ACTIVE_DEVELOPER: 1 << 22,
+    // Official Discord User Flags (Powers of 2) - Updated with official values
+    const UserFlags = {
+      STAFF: 1 << 0, // 1 - Discord Employee
+      PARTNER: 1 << 1, // 2 - Partnered Server Owner
+      HYPESQUAD: 1 << 2, // 4 - HypeSquad Events Member
+      BUG_HUNTER_LEVEL_1: 1 << 3, // 8 - Bug Hunter Level 1
+      HYPESQUAD_ONLINE_HOUSE_1: 1 << 6, // 64 - HypeSquad Bravery House
+      HYPESQUAD_ONLINE_HOUSE_2: 1 << 7, // 128 - HypeSquad Brilliance House
+      HYPESQUAD_ONLINE_HOUSE_3: 1 << 8, // 256 - HypeSquad Balance House
+      PREMIUM_EARLY_SUPPORTER: 1 << 9, // 512 - Early Nitro Supporter
+      TEAM_USER: 1 << 10, // 1024 - Team User
+      BUG_HUNTER_LEVEL_2: 1 << 14, // 16384 - Bug Hunter Level 2 (Golden)
+      VERIFIED_BOT: 1 << 16, // 65536 - Verified Bot
+      VERIFIED_DEVELOPER: 1 << 17, // 131072 - Early Verified Bot Developer
+      CERTIFIED_MODERATOR: 1 << 18, // 262144 - Moderator Programs Alumni
+      BOT_HTTP_INTERACTIONS: 1 << 19, // 524288 - Bot HTTP Interactions
+      ACTIVE_DEVELOPER: 1 << 22, // 4194304 - Active Developer
     };
 
-    // Badge name mapping for user-friendly display
-    const badgeNameMap: { [key: string]: string } = {
-      'DISCORD_EMPLOYEE': 'Discord Staff',
-      'PARTNERED_SERVER_OWNER': 'Partnered Server Owner',
-      'HYPESQUAD_EVENTS': 'HypeSquad Events',
-      'BUG_HUNTER_LEVEL_1': 'Bug Hunter Level 1',
-      'HOUSE_BRAVERY': 'HypeSquad Bravery',
-      'HOUSE_BRILLIANCE': 'HypeSquad Brilliance',
-      'HOUSE_BALANCE': 'HypeSquad Balance',
-      'EARLY_SUPPORTER': 'Early Supporter',
-      'TEAM_USER': 'Team User',
-      'BUG_HUNTER_LEVEL_2': 'Bug Hunter Level 2',
-      'VERIFIED_BOT': 'Verified Bot',
-      'VERIFIED_DEVELOPER': 'Verified Bot Developer',
-      'CERTIFIED_MODERATOR': 'Certified Moderator',
-      'BOT_HTTP_INTERACTIONS': 'Bot HTTP Interactions',
-      'ACTIVE_DEVELOPER': 'Active Developer',
-    };
+    // Check for each badge using bitwise AND operation
+    if (publicFlags & UserFlags.STAFF) badges.push('discord_staff');
+    if (publicFlags & UserFlags.PARTNER) badges.push('discord_partner');
+    if (publicFlags & UserFlags.HYPESQUAD) badges.push('hypesquad_events');
+    if (publicFlags & UserFlags.BUG_HUNTER_LEVEL_1) badges.push('bug_hunter_level_1');
+    if (publicFlags & UserFlags.HYPESQUAD_ONLINE_HOUSE_1) badges.push('hypesquad_bravery');
+    if (publicFlags & UserFlags.HYPESQUAD_ONLINE_HOUSE_2) badges.push('hypesquad_brilliance');
+    if (publicFlags & UserFlags.HYPESQUAD_ONLINE_HOUSE_3) badges.push('hypesquad_balance');
+    if (publicFlags & UserFlags.PREMIUM_EARLY_SUPPORTER) badges.push('early_supporter');
+    if (publicFlags & UserFlags.BUG_HUNTER_LEVEL_2) badges.push('bug_hunter_level_2');
+    if (publicFlags & UserFlags.VERIFIED_DEVELOPER) badges.push('verified_developer');
+    if (publicFlags & UserFlags.CERTIFIED_MODERATOR) badges.push('moderator_alumni');
+    if (publicFlags & UserFlags.ACTIVE_DEVELOPER) badges.push('active_developer');
 
-    // Check each flag and add corresponding badge
-    Object.entries(FLAGS).forEach(([flagName, flagValue]) => {
-      if ((publicFlags & flagValue) === flagValue) {
-        const displayName = badgeNameMap[flagName] || flagName.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
-        badges.push(displayName);
-      }
-    });
-    
+    // Handle Nitro badges separately (not in public_flags)
+    if (premiumType) {
+      if (premiumType === 2) badges.push('discord_nitro_full');
+      else if (premiumType === 1) badges.push('discord_nitro_classic');
+      else if (premiumType === 3) badges.push('discord_nitro_basic');
+    }
+
     return badges;
   }
 
