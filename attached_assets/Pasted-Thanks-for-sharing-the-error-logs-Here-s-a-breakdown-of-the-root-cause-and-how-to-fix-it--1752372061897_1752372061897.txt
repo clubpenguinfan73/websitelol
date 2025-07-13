@@ -1,0 +1,81 @@
+Thanks for sharing the error logs. Here's a breakdown of the root cause and how to fix it.
+
+---
+
+### 🔍 **Error Summary**
+
+The key lines are:
+
+```
+npm warn exec The following package was not found and will be installed: vite@7.0.4
+failed to load config from /opt/build/repo/vite.config.ts
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite'
+```
+
+### 🚨 **Root Cause**
+
+The build is failing because Netlify is trying to run `npx vite build`, but the `vite` package is **not installed locally** or is not recognized during the build. Even though it mentions installing `vite@7.0.4`, it seems the install is not effective in the Netlify environment before `vite.config.ts` is evaluated.
+
+---
+
+### ✅ **Fixes**
+
+#### 1. **Add `vite` as a `devDependency`**
+
+Make sure Vite is properly installed and listed in your `package.json`:
+
+```bash
+npm install --save-dev vite
+```
+
+Check your `package.json`:
+
+```json
+"devDependencies": {
+  "vite": "^4.5.0"  // Use a known stable version
+}
+```
+
+> ❗ Avoid relying on implicit `npx vite` installs, especially in CI/CD environments like Netlify.
+
+---
+
+#### 2. **Ensure Proper `vite.config.ts` Support**
+
+Netlify might be using an older Node version that doesn’t support TypeScript config files out of the box. You can either:
+
+* Rename `vite.config.ts` to `vite.config.js` and convert the config to JS, **or**
+* Add a build step that transpiles your TypeScript config file before running `vite`.
+
+Alternatively, ensure Vite is installed so it can properly handle `.ts` config files.
+
+---
+
+#### 3. **Pin Node Version (Optional but Helpful)**
+
+In your project root, add a `.nvmrc` or set this in `netlify.toml`:
+
+```toml
+[build.environment]
+  NODE_VERSION = "18"
+```
+
+(Adjust the version as needed.)
+
+---
+
+#### 4. **Final `netlify.toml` Sample**
+
+```toml
+[build]
+  command = "npm install && npm run build"
+  functions = "netlify/functions"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+```
+
+---
+
+Let me know if you want help modifying your `vite.config.ts`, or inspecting your `package.json`.
