@@ -327,19 +327,26 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
                       <h4 className="font-semibold text-white">{discordProfile.username}</h4>
                       <div className="flex items-center gap-1">
                         {/* Render actual Discord badges if available */}
-                        {discordProfile.badges && discordProfile.badges.length > 0 && discordProfile.badges.map((badge, index) => (
-                          <div key={index} className="w-4 h-4 flex items-center justify-center" title={badge}>
-                            <img 
-                              src={getBadgeIcon(badge)} 
-                              alt={badge} 
-                              className="w-4 h-4 object-contain"
-                              onError={(e) => {
-                                // Fallback to Early Supporter badge if image fails to load
-                                (e.target as HTMLImageElement).src = "https://cdn.discordapp.com/badges/7060786766c9a840eb3019e725d2b358.png";
-                              }}
-                            />
-                          </div>
-                        ))}
+                        {discordProfile.badges && discordProfile.badges.length > 0 && discordProfile.badges.map((badge, index) => {
+                          console.log(`Rendering badge: ${badge}, URL: ${getBadgeIcon(badge)}`);
+                          return (
+                            <div key={index} className="w-5 h-5 flex items-center justify-center" title={badge}>
+                              <img 
+                                src={getBadgeIcon(badge)} 
+                                alt={badge} 
+                                className="w-5 h-5 object-contain"
+                                onError={(e) => {
+                                  console.error(`Failed to load badge: ${badge}`);
+                                  // Fallback to Early Supporter badge if image fails to load
+                                  (e.target as HTMLImageElement).src = "https://cdn.discordapp.com/badges/7060786766c9a840eb3019e725d2b358.png";
+                                }}
+                                onLoad={() => {
+                                  console.log(`Successfully loaded badge: ${badge}`);
+                                }}
+                              />
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
