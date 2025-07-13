@@ -23,7 +23,7 @@ MONGODB_URI=mongodb+srv://clubpenguinfan73:YBF8yGfxwJjQzCDa@cluster0.mzuvuzl.mon
 
 ### 🔐 Security (OPTIONAL - GENERATES AUTOMATICALLY IF NOT SET)
 ```
-SESSION_SECRET=your-random-secure-session-secret-here
+SESSION_SECRET=renegade-session-2025-secure-key-Cat-biolink-production-xyz789
 ```
 
 ### 🌍 Environment (REQUIRED)
