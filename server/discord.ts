@@ -76,7 +76,11 @@ class DiscordAPI {
     this.clientId = process.env.DISCORD_CLIENT_ID || '';
     this.clientSecret = process.env.DISCORD_CLIENT_SECRET || '';
     
-    this.initializeBot();
+    console.log('Discord API initialized with token:', this.botToken ? `${this.botToken.substring(0, 20)}...` : 'NOT SET');
+    console.log('Discord Client ID:', this.clientId || 'NOT SET');
+    
+    // Don't initialize WebSocket bot, use REST API only
+    // this.initializeBot();
   }
 
   private async initializeBot() {
@@ -178,16 +182,24 @@ class DiscordAPI {
   }
 
   private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
+    console.log(`Making Discord API request to: ${endpoint}`);
+    console.log(`Using token: ${this.botToken ? `${this.botToken.substring(0, 20)}...` : 'NOT SET'}`);
+    
     const response = await fetch(`https://discord.com/api/v10${endpoint}`, {
       ...options,
       headers: {
         'Authorization': `Bot ${this.botToken}`,
+        'User-Agent': 'DiscordBot (https://github.com/clubpenguinfan73/renegaderaider-wtf2, 1.0.0)',
         'Content-Type': 'application/json',
         ...options.headers,
       },
     });
 
+    console.log(`Discord API response status: ${response.status}`);
+    
     if (!response.ok) {
+      const errorText = await response.text();
+      console.log(`Discord API error response: ${errorText}`);
       throw new Error(`Discord API error: ${response.status} ${response.statusText}`);
     }
 
