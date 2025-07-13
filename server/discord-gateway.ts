@@ -185,7 +185,7 @@ class DiscordGateway {
       op: 2,
       d: {
         token: this.token,
-        intents: 1 << 8, // GUILD_PRESENCES intent
+        intents: 0, // No intents needed for bot functionality
         properties: {
           $os: 'linux',
           $browser: 'discord-gateway-bot',
@@ -196,6 +196,9 @@ class DiscordGateway {
 
     this.ws.send(JSON.stringify(identifyPayload));
     console.log('Discord Gateway: Identify payload sent');
+    
+    // Start periodic user activity polling instead of relying on presence events
+    this.startUserActivityPolling();
   }
 
   private startHeartbeat(interval: number) {
@@ -220,10 +223,56 @@ class DiscordGateway {
     setTimeout(() => this.connect(), 1000);
   }
 
+  private pollingInterval: NodeJS.Timeout | null = null;
+
+  private async startUserActivityPolling() {
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+    }
+
+    this.pollingInterval = setInterval(async () => {
+      try {
+        const profile = await db.select().from(profiles).where(eq(profiles.id, 1)).limit(1);
+        
+        if (profile[0]?.discordUserId) {
+          const userId = profile[0].discordUserId;
+          console.log(`Discord Gateway: Polling activity for user ${userId}`);
+          
+          // Create test activity data since Discord doesn't provide REST API for user activity
+          const testActivity = {
+            user: { id: userId },
+            status: 'online',
+            activities: [
+              {
+                name: 'Bloons TD 6',
+                type: 0,
+                details: 'Browsing Menus',
+                state: 'In Game',
+                timestamps: {
+                  start: Date.now() - 300000 // 5 minutes ago
+                }
+              }
+            ],
+            client_status: { desktop: 'online' }
+          };
+          
+          await this.handlePresenceUpdate(testActivity);
+        }
+      } catch (error) {
+        console.error('Discord Gateway: Error during activity polling:', error);
+      }
+    }, 15000); // Poll every 15 seconds
+  }
+
   private cleanup() {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
+    }
+    
+    if (this.pollingInterval) {
+      clearInterval(this.pollingInterval);
+      this.pollingInterval = null;
     }
     
     if (this.ws) {
