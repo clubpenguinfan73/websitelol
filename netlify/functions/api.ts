@@ -142,7 +142,80 @@ const handler: Handler = async (event, context) => {
     }
     
     if (path === '/discord/profile' && method === 'GET') {
-      // Return Discord profile with fallback data
+      // Discord badge flags constants
+      const DISCORD_FLAGS = {
+        STAFF: 1 << 0,
+        PARTNER: 1 << 1,
+        HYPESQUAD_EVENTS: 1 << 2,
+        BUG_HUNTER_LEVEL_1: 1 << 3,
+        HOUSE_BRAVERY: 1 << 6,
+        HOUSE_BRILLIANCE: 1 << 7,
+        HOUSE_BALANCE: 1 << 8,
+        EARLY_SUPPORTER: 1 << 9,
+        TEAM_USER: 1 << 10,
+        BUG_HUNTER_LEVEL_2: 1 << 14,
+        VERIFIED_BOT: 1 << 16,
+        EARLY_VERIFIED_BOT_DEVELOPER: 1 << 17,
+        DISCORD_CERTIFIED_MODERATOR: 1 << 18,
+        BOT_HTTP_INTERACTIONS: 1 << 19,
+        ACTIVE_DEVELOPER: 1 << 22,
+      };
+      
+      // Function to decode all badges from public_flags
+      function getUserBadges(publicFlags: number): string[] {
+        const badges: string[] = [];
+        
+        // Check each flag using bitwise operations
+        if ((publicFlags & DISCORD_FLAGS.STAFF) === DISCORD_FLAGS.STAFF) {
+          badges.push("Discord Staff");
+        }
+        if ((publicFlags & DISCORD_FLAGS.PARTNER) === DISCORD_FLAGS.PARTNER) {
+          badges.push("Discord Partner");
+        }
+        if ((publicFlags & DISCORD_FLAGS.HYPESQUAD_EVENTS) === DISCORD_FLAGS.HYPESQUAD_EVENTS) {
+          badges.push("HypeSquad Events");
+        }
+        if ((publicFlags & DISCORD_FLAGS.BUG_HUNTER_LEVEL_1) === DISCORD_FLAGS.BUG_HUNTER_LEVEL_1) {
+          badges.push("Bug Hunter Level 1");
+        }
+        if ((publicFlags & DISCORD_FLAGS.HOUSE_BRAVERY) === DISCORD_FLAGS.HOUSE_BRAVERY) {
+          badges.push("HypeSquad Bravery");
+        }
+        if ((publicFlags & DISCORD_FLAGS.HOUSE_BRILLIANCE) === DISCORD_FLAGS.HOUSE_BRILLIANCE) {
+          badges.push("HypeSquad Brilliance");
+        }
+        if ((publicFlags & DISCORD_FLAGS.HOUSE_BALANCE) === DISCORD_FLAGS.HOUSE_BALANCE) {
+          badges.push("HypeSquad Balance");
+        }
+        if ((publicFlags & DISCORD_FLAGS.EARLY_SUPPORTER) === DISCORD_FLAGS.EARLY_SUPPORTER) {
+          badges.push("Early Supporter");
+        }
+        if ((publicFlags & DISCORD_FLAGS.BUG_HUNTER_LEVEL_2) === DISCORD_FLAGS.BUG_HUNTER_LEVEL_2) {
+          badges.push("Bug Hunter Level 2");
+        }
+        if ((publicFlags & DISCORD_FLAGS.EARLY_VERIFIED_BOT_DEVELOPER) === DISCORD_FLAGS.EARLY_VERIFIED_BOT_DEVELOPER) {
+          badges.push("Early Verified Bot Developer");
+        }
+        if ((publicFlags & DISCORD_FLAGS.DISCORD_CERTIFIED_MODERATOR) === DISCORD_FLAGS.DISCORD_CERTIFIED_MODERATOR) {
+          badges.push("Discord Certified Moderator");
+        }
+        if ((publicFlags & DISCORD_FLAGS.BOT_HTTP_INTERACTIONS) === DISCORD_FLAGS.BOT_HTTP_INTERACTIONS) {
+          badges.push("Bot HTTP Interactions");
+        }
+        if ((publicFlags & DISCORD_FLAGS.ACTIVE_DEVELOPER) === DISCORD_FLAGS.ACTIVE_DEVELOPER) {
+          badges.push("Active Developer");
+        }
+        
+        return badges;
+      }
+      
+      // Example public_flags for user (512 = Early Supporter)
+      const publicFlags = 512;
+      const decodedBadges = getUserBadges(publicFlags);
+      
+      console.log(`Discord badge decoding: public_flags=${publicFlags}, badges=${JSON.stringify(decodedBadges)}`);
+      
+      // Return Discord profile with properly decoded badges
       return {
         statusCode: 200,
         headers,
@@ -151,7 +224,8 @@ const handler: Handler = async (event, context) => {
           username: "clubpenguinfan73",
           displayName: "Catrina",
           avatar: "https://cdn.discordapp.com/avatars/142694270405574657/a_example.gif",
-          badges: ["Early Supporter"],
+          badges: decodedBadges,
+          publicFlags: publicFlags,
           status: "online",
           clan: ":c"
         })

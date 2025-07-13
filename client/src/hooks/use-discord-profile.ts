@@ -48,14 +48,32 @@ export function useDiscordProfile() {
 
   const getBadgeIcon = (badgeName: string) => {
     switch (badgeName) {
-      case 'Early Supporter':
-        return discordBadges.early_supporter;
+      case 'Discord Staff':
+        return discordBadges.staff;
+      case 'Discord Partner':
+        return discordBadges.partner;
       case 'HypeSquad Events':
         return discordBadges.hypesquad_events;
+      case 'Bug Hunter Level 1':
+        return discordBadges.bug_hunter_level_1;
+      case 'HypeSquad Bravery':
+        return discordBadges.hypesquad_bravery;
+      case 'HypeSquad Brilliance':
+        return discordBadges.hypesquad_brilliance;
+      case 'HypeSquad Balance':
+        return discordBadges.hypesquad_balance;
+      case 'Early Supporter':
+        return discordBadges.early_supporter;
+      case 'Bug Hunter Level 2':
+        return discordBadges.bug_hunter_level_2;
+      case 'Early Verified Bot Developer':
+        return discordBadges.early_verified_bot_developer;
+      case 'Discord Certified Moderator':
+        return discordBadges.discord_certified_moderator;
+      case 'Bot HTTP Interactions':
+        return discordBadges.bot_http_interactions;
       case 'Active Developer':
         return discordBadges.active_developer;
-      case 'Discord Nitro':
-        return discordBadges.discord_nitro;
       default:
         return discordBadges.early_supporter;
     }
