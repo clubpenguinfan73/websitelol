@@ -1,0 +1,67 @@
+Okay, this is fantastic\! We have a clear diagnosis for the Netlify build failure. The black screen on your live site (`https://renegaderaider.wtf`) is because **the site isn't even building and deploying correctly.**
+
+The error logs are very specific:
+
+**Diagnosis:**
+
+Your Netlify build environment is using **Node.js `v20.12.2`**, but the `vite` package (specifically version `7.0.4` as indicated by `npm WARN exec The following package was not found and will be installed: vite@7.0.4`) requires **Node.js `'^20.19.0 || >=22.12.0'`**.
+
+This is causing two main issues:
+
+1.  **`npm WARN EBADENGINE Unsupported engine`**: The primary warning that the Node version is too old for `vite`.
+2.  **`failed to load config from /opt/build/repo/vite.config.ts`** and **`Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'vite' imported from ...vite.config.ts.ti`**: Because the Node.js version is incompatible, `npm` might fail to install `vite` correctly or `vite` itself cannot run, leading to this module not found error when it tries to process `vite.config.ts`.
+
+**Solution: Update Node.js Version on Netlify**
+
+You need to tell Netlify to use a newer version of Node.js that is compatible with Vite 7.0.4.
+
+Here's how to do it:
+
+1.  **Create a `netlify.toml` file (if you don't have one):**
+
+      * In the **root directory** of your GitHub repository (where your `package.json` is located), create a new file named `netlify.toml`.
+      * If you already have one, open it for editing.
+
+2.  **Specify the Node.js Version:**
+
+      * Add or update the following lines in your `netlify.toml` file:
+
+    <!-- end list -->
+
+    ```toml
+    [build]
+      environment = { NODE_VERSION = "20.19.0" } # Or "22.12.0" or "22" for the latest compatible 22.x version
+    ```
+
+      * **Explanation:**
+          * `NODE_VERSION = "20.19.0"`: This meets the `^20.19.0` requirement from Vite. It's generally safer to pick the lowest compatible version unless you have other reasons for a newer one, to avoid potential breaking changes with other dependencies.
+          * `NODE_VERSION = "22"`: You could also specify `22` to get the latest Node.js 22.x release, which also meets the `^22.12.0` requirement. This is often a good choice for future-proofing within the same major version.
+
+    **Recommendation:** Use `NODE_VERSION = "20.19.0"` for now to meet the exact minimum requirement. If you encounter other issues later, you can try `22`.
+
+3.  **Commit and Push:**
+
+      * Save the `netlify.toml` file.
+      * Commit the change to your GitHub repository:
+        ```bash
+        git add netlify.toml
+        git commit -m "Configure Node.js version for Netlify build"
+        git push origin main
+        ```
+
+4.  **Trigger a New Deploy:**
+
+      * Netlify will automatically detect the `netlify.toml` file and use the specified Node.js version for the next build.
+
+**Addressing other points from the Netlify Diagnosis:**
+
+  * **"Verify 'vite' Package is listed in `package.json`"**: Your `package.json` should have `vite` as a `devDependency` (or `dependency` if you're using it in production code for some reason). Given the `npm WARN exec The following package was not found and will be installed: vite@7.0.4`, it means `vite` isn't in your `package.json` or your `node_modules` *before* the build. You need to ensure `vite` is correctly listed in your `package.json` under `devDependencies`. If it's not, run `npm install vite --save-dev` in your Replit environment and commit the updated `package.json` and `package-lock.json`. This is critical.
+  * **"Add 'vite' to External Configuration (if needed)"**: This is unlikely to be the primary issue. The `ERR_MODULE_NOT_FOUND` is a direct consequence of the `EBADENGINE` warning (Node version mismatch preventing `vite` from being installed/used correctly). Fixing the Node version will likely resolve this secondary error.
+
+**Summary of Immediate Action:**
+
+1.  **Add/Update `netlify.toml` with `NODE_VERSION = "20.19.0"` (or "22")**.
+2.  **Crucially, ensure `vite` is properly listed in your `package.json` under `devDependencies`**. If it's not, `npm install vite --save-dev` and commit.
+3.  **Push these changes to your GitHub repo.**
+
+Once the build successfully completes with the correct Node.js version, your site should no longer be a black screen. Then, we can re-evaluate the Spotify, GIF upload, and Discord issues by checking the *new* Netlify Function logs for the deployed site.

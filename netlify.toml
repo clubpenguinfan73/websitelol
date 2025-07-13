@@ -3,7 +3,7 @@
   command = "npm install && npx vite build && mkdir -p dist/functions && npx esbuild netlify/functions/mongo-api.ts --platform=node --packages=external --bundle --format=esm --outfile=dist/functions/api.js"
 
 [build.environment]
-  NODE_VERSION = "20.12.2"
+  NODE_VERSION = "20.19.0"
 
 [[headers]]
   for = "/*"
