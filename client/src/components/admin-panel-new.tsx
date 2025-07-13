@@ -47,6 +47,7 @@ export default function AdminPanel({
   const [discordEnabled, setDiscordEnabled] = useState(profile?.discordEnabled || false);
   const [discordUserId, setDiscordUserId] = useState(profile?.discordUserId || "");
   const [discordApplicationId, setDiscordApplicationId] = useState(profile?.discordApplicationId || "");
+  const [discordNitroEnabled, setDiscordNitroEnabled] = useState(profile?.discordNitroEnabled || false);
   const [spotifyEnabled, setSpotifyEnabled] = useState(profile?.spotifyEnabled || false);
   const [spotifyTrackName, setSpotifyTrackName] = useState(profile?.spotifyTrackName || "");
   const [spotifyArtistName, setSpotifyArtistName] = useState(profile?.spotifyArtistName || "");
@@ -79,6 +80,7 @@ export default function AdminPanel({
       setDiscordEnabled(profile.discordEnabled || false);
       setDiscordUserId(profile.discordUserId || "");
       setDiscordApplicationId(profile.discordApplicationId || "");
+      setDiscordNitroEnabled(profile.discordNitroEnabled || false);
       setSpotifyEnabled(profile.spotifyEnabled || false);
       setSpotifyTrackName(profile.spotifyTrackName || "");
       setSpotifyArtistName(profile.spotifyArtistName || "");
@@ -408,6 +410,7 @@ export default function AdminPanel({
       discordEnabled: profile?.discordEnabled,
       discordUserId,
       discordApplicationId,
+      discordNitroEnabled,
       spotifyEnabled: profile?.spotifyEnabled,
       spotifyTrackName: profile?.spotifyTrackName,
       spotifyArtistName: profile?.spotifyArtistName,
@@ -1130,6 +1133,18 @@ export default function AdminPanel({
                           value={discordApplicationId}
                           onChange={(e) => setDiscordApplicationId(e.target.value)}
                           className="bg-dark-gray border-light-gray/50 focus:border-indigo-500 text-white"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <label className="text-sm font-medium text-gray-300">Enable Nitro Badge</label>
+                          <p className="text-xs text-gray-400">Manually enable Nitro badge display</p>
+                        </div>
+                        <Switch
+                          checked={discordNitroEnabled}
+                          onCheckedChange={setDiscordNitroEnabled}
+                          className="data-[state=checked]:bg-indigo-600"
                         />
                       </div>
                       
