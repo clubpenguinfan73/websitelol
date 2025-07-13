@@ -1,0 +1,90 @@
+You're absolutely right — and here's the **technical explanation** for why **Spotify presence works**, but **games or custom statuses don’t**:
+
+---
+
+## 🎵 Why Spotify Works
+
+Spotify data is **exposed publicly** in Discord’s user presence **if your status is set to public** and you're sharing it. The Discord API (via `/users/@me` and `gateway` presence updates) allows clients to read it *if*:
+
+* Your bot has the **`PRESENCE INTENT`** enabled in the [Discord Developer Portal](https://discord.com/developers/applications)
+* Your bot is in a **server with the user**
+* You're using the **WebSocket (Gateway API)** — **not** just REST
+
+> ✅ Spotify is exposed in a special way and is more lenient than game activity.
+
+---
+
+## 🎮 Why Discord Games / Custom Status Don't Show
+
+### ❌ REST API Limitation:
+
+Discord’s REST API (`/users/@me`) does **not return game activity or custom status**.
+
+### ❌ Your bot isn’t in a shared server:
+
+Game presence and rich presence require that your bot is in the **same server** as the user — or it's completely blind to their activity.
+
+### ❌ You’re not using the Gateway (WebSocket) connection:
+
+To track presence (games, custom statuses), you need to use a **WebSocket connection** to the Discord Gateway — like most bots do. REST alone can’t track presence.
+
+---
+
+## ✅ What You Can Do
+
+### ✅ 1. Make sure your bot is in the same server as the user
+
+* Go to OAuth2 → Bot
+* Use this URL:
+
+  ```
+  https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot&permissions=8
+  ```
+
+### ✅ 2. Enable presence intent
+
+Go to:
+
+* [Discord Developer Portal](https://discord.com/developers/applications)
+* Your bot → **Bot** tab
+* ✅ Enable **PRESENCE INTENT**
+* ✅ Enable **SERVER MEMBERS INTENT**
+
+### ✅ 3. Use a real Discord bot (not just OAuth client) with Gateway support
+
+To see game/activity, your bot must use a **gateway library** like:
+
+* [discord.js](https://discord.js.org)
+* [Eris](https://abal.moe/Eris/)
+* [Discord.py](https://discordpy.readthedocs.io/) (Python)
+
+Then it can do something like:
+
+```js
+client.on('presenceUpdate', (oldPresence, newPresence) => {
+  const game = newPresence.activities.find(a => a.type === 0); // Playing
+  if (game) {
+    console.log(`${newPresence.user.username} is playing ${game.name}`);
+  }
+});
+```
+
+---
+
+## 🚧 Can't use a bot in a server?
+
+Then unfortunately, you're **limited to public presence like Spotify only**, and you cannot access what game a user is playing due to Discord’s privacy restrictions.
+
+---
+
+## 💡 Summary
+
+| Feature           | Requires Bot in Server | Requires Presence Intent | Works via REST |
+| ----------------- | ---------------------- | ------------------------ | -------------- |
+| **Spotify**       | ✅ Yes (preferred)      | ✅ Yes                    | ❌ No           |
+| **Game Activity** | ✅ Yes                  | ✅ Yes                    | ❌ No           |
+| **Custom Status** | ✅ Yes                  | ✅ Yes                    | ❌ No           |
+
+---
+
+Would you like help setting up a minimal `discord.js` bot that connects to the gateway and listens for game presence, then forwards that to your website API?
