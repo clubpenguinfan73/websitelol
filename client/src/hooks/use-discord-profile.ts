@@ -46,11 +46,8 @@ export function useDiscordProfile() {
     staleTime: 10000, // Data is fresh for 10 seconds
   });
 
-  // Process the profile to include combined badges (public_flags + premium_type)
-  const processedProfile = profile ? {
-    ...profile,
-    badges: getCombinedBadges(profile.publicFlags, profile.premiumType)
-  } : profile;
+  // Use the badges from the server response directly - server already handles manual Nitro toggle
+  const processedProfile = profile;
 
 
 
