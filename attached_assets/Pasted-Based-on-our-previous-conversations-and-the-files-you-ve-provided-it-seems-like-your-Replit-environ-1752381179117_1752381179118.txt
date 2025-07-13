@@ -1,0 +1,47 @@
+Based on our previous conversations and the files you've provided, it seems like your Replit environment is currently using a local or embedded database that Replit provides, while your preference is to use MongoDB. Your screenshots also show MongoDB Atlas cluster details, suggesting you have a MongoDB instance set up.
+
+To ensure your website uses **MongoDB** exclusively and does not attempt to interact with a Replit-specific database, you need to follow these steps:
+
+1.  **Remove or Comment Out Replit DB Code:**
+
+      * Go through your backend code (likely in your Netlify functions or Node.js server that runs your Discord bot/API).
+      * Look for any `require` or `import` statements related to `replitdb`, `replit-db`, or `@{replit.com/repl-db}`.
+      * Comment out or entirely remove any code that initializes, connects to, reads from, or writes to a Replit Database. This includes any environment variables or configuration specific to Replit DB.
+
+2.  **Ensure MongoDB Connection is Correctly Configured:**
+
+      * Verify that your MongoDB connection string is correctly set up as an environment variable in your deployment environment (Netlify, Replit's "Secrets" if your bot is hosted there). This is typically named `MONGODB_URI` or `MONGO_URI`.
+
+      * Your backend code should use this environment variable to establish a connection to your MongoDB Atlas cluster.
+
+      * Example (Node.js/Mongoose):
+
+        ```javascript
+        // In your backend server or Netlify Function
+        import mongoose from 'mongoose';
+        // or
+        // const mongoose = require('mongoose'); // if using CommonJS
+
+        const mongoUri = process.env.MONGODB_URI;
+
+        if (!mongoUri) {
+            console.error('MongoDB URI is not defined! Please set MONGODB_URI environment variable.');
+            process.exit(1); // Or handle error gracefully
+        }
+
+        mongoose.connect(mongoUri)
+            .then(() => console.log('MongoDB connected successfully!'))
+            .catch(err => console.error('MongoDB connection error:', err));
+        ```
+
+3.  **Route All Database Operations to MongoDB:**
+
+      * Ensure all data persistence operations (saving user data, Spotify data, Discord activity, etc.) are explicitly using your MongoDB models and queries.
+      * If you have different data models (e.g., `User`, `SpotifyActivity`), make sure their definitions and interactions are pointed towards Mongoose/MongoDB.
+
+4.  **Check Build and Deployment Configuration:**
+
+      * **Netlify:** If you're deploying to Netlify, ensure that your `netlify.toml` file or Netlify UI environment variables clearly define `MONGODB_URI` and *do not* include any `REPLIT_DB_URL` or similar variables that might inadvertently activate Replit DB.
+      * **Replit (if hosting your bot there):** If your Discord bot (which might also interact with your database) is hosted on Replit, ensure you're using Replit's "Secrets" feature to store `MONGODB_URI` securely, and that your bot's code is configured to use this variable for MongoDB connections, and *not* the Replit DB.
+
+By following these steps, you'll explicitly direct all your application's data operations to your MongoDB instance, completely bypassing Replit's native database.
