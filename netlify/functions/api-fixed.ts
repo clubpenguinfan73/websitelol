@@ -20,7 +20,7 @@ const handler: Handler = async (event, context) => {
   }
 
   try {
-    const path = event.path.replace('/.netlify/functions/api', '');
+    const path = event.path.replace('/.netlify/functions/api-fixed', '');
     const method = event.httpMethod;
     
     console.log(`API Request: ${method} ${path}`);
