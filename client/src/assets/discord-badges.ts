@@ -129,6 +129,7 @@ export const getBadgesFromFlags = (publicFlags: number): string[] => {
 export const getBadgeIcon = (badgeName: string): string => {
   // Official Discord CDN badge URLs - Complete set
   const badgeIconURLs: { [key: string]: string } = {
+    // Full names (from frontend)
     "Discord Staff": "https://cdn.discordapp.com/badges/5e74e9b61934fc1f67c65515d1f7e60d.png",
     "Discord Partner": "https://cdn.discordapp.com/badges/3f9748e53446a137a052f3454e2de41e.png", 
     "HypeSquad Events": "https://cdn.discordapp.com/badges/bf01d1073931f921909045f3a39fd264.png",
@@ -141,7 +142,22 @@ export const getBadgeIcon = (badgeName: string): string => {
     "Active Developer": "https://cdn.discordapp.com/badges/6bdc42827a38498929a4920da12695d9.png",
     "Verified Bot Developer": "https://cdn.discordapp.com/badges/6df5892e0f35b051f8b61eace34f4967.png",
     "Certified Moderator": "https://cdn.discordapp.com/badges/40b8e8b6b4a55e7c4e2d8d1b3e3b8ba2.png",
-    "Bot HTTP Interactions": "https://cdn.discordapp.com/badges/6f26ddd1bf59740c536d2274bb834a55.png"
+    "Bot HTTP Interactions": "https://cdn.discordapp.com/badges/6f26ddd1bf59740c536d2274bb834a55.png",
+    
+    // Backend snake_case names (from API)
+    "discord_staff": "https://cdn.discordapp.com/badges/5e74e9b61934fc1f67c65515d1f7e60d.png",
+    "discord_partner": "https://cdn.discordapp.com/badges/3f9748e53446a137a052f3454e2de41e.png", 
+    "hypesquad_events": "https://cdn.discordapp.com/badges/bf01d1073931f921909045f3a39fd264.png",
+    "hypesquad_bravery": "https://cdn.discordapp.com/badges/8a88d63823d8a71cd5e390baa45efa02.png",
+    "hypesquad_brilliance": "https://cdn.discordapp.com/badges/011940fd013da3f7fb926e4a1cd2e618.png", 
+    "hypesquad_balance": "https://cdn.discordapp.com/badges/3aa41de486fa12454c3761e8e223442e.png",
+    "bug_hunter_level_1": "https://cdn.discordapp.com/badges/2717692c7dca7289b35297368a940dd0.png",
+    "bug_hunter_level_2": "https://cdn.discordapp.com/badges/848f79194d4be5ff5f81505cbd0ce1e6.png",
+    "early_supporter": "https://cdn.discordapp.com/badges/7060786766c9a840eb3019e725d2b358.png",
+    "active_developer": "https://cdn.discordapp.com/badges/6bdc42827a38498929a4920da12695d9.png",
+    "verified_developer": "https://cdn.discordapp.com/badges/6df5892e0f35b051f8b61eace34f4967.png",
+    "moderator_alumni": "https://cdn.discordapp.com/badges/40b8e8b6b4a55e7c4e2d8d1b3e3b8ba2.png",
+    "bot_http_interactions": "https://cdn.discordapp.com/badges/6f26ddd1bf59740c536d2274bb834a55.png"
   };
   
   return badgeIconURLs[badgeName] || "https://cdn.discordapp.com/badges/7060786766c9a840eb3019e725d2b358.png";
