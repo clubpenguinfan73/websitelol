@@ -470,7 +470,7 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
           
           {/* Real-time Activity Tracker */}
           <motion.div
-            className="bg-medium-gray/80 backdrop-blur-sm border border-light-gray/30 rounded-xl p-4 transition-all duration-200 hover:shadow-2xl"
+            className="transition-all duration-200 hover:shadow-2xl"
             whileHover={{ scale: 1.02 }}
           >
             <ActivityTracker />

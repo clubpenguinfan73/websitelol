@@ -112,6 +112,12 @@ const ActivityTracker: React.FC = () => {
     
     return (
       <div className="bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/30 rounded-xl p-4 mb-4 backdrop-blur-sm">
+        {/* Centered Header */}
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          <span className="text-sm text-green-400 font-medium">Listening to Spotify</span>
+        </div>
+        
         <div className="flex items-start gap-4">
           {/* Album Art */}
           <div className="flex-shrink-0">
@@ -130,11 +136,6 @@ const ActivityTracker: React.FC = () => {
           
           {/* Track Info */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              <span className="text-sm text-green-400 font-medium">Listening to Spotify</span>
-            </div>
-            
             <div className="text-white font-semibold text-lg mb-1 truncate">{track.name}</div>
             <div className="text-gray-300 text-sm mb-1">
               by {track.artists.map(a => a.name).join(', ')}
