@@ -1,0 +1,145 @@
+Here’s a **step-by-step, in-depth guide** to resolve your repeated Netlify deploy failures for your repository: **[https://github.com/clubpenguinfan73/websitelol](https://github.com/clubpenguinfan73/websitelol)**
+
+---
+
+### 1. ✅ Confirm `vite` is installed
+
+Your deploy logs show:
+
+```
+sh: 1: vite: not found
+```
+
+So Netlify can't find Vite.
+
+* Open **`package.json`**.
+* Ensure you have:
+
+  ```json
+  "devDependencies": {
+    "vite": "^4.0.0",
+    // …
+  },
+  "scripts": {
+    "build": "vite build && esbuild server/index.ts …"
+  }
+  ```
+* If `vite` is **missing**, install it:
+
+  ```bash
+  npm install --save-dev vite
+  ```
+* **Commit** both `package.json` and `package-lock.json`, then push to GitHub.
+
+---
+
+### 2. 🔧 Adjust Netlify’s build settings
+
+Netlify likely is running `npm run build`, but defaults to wrong publish folder (e.g., `build/`):
+
+1. Go to **Netlify dashboard → Site settings → Build & Deploy → Continuous Deployment → Build Settings**:
+
+   * **Build command**: `npm run build`
+   * **Publish directory**: `dist`
+
+2. Or set this in `netlify.toml` at your project root:
+
+   ```toml
+   [build]
+     command   = "npm run build"
+     publish   = "dist"
+     functions = "netlify/functions"
+   ```
+
+3. For Single Page App behavior, add routing redirects:
+
+   ```toml
+   [[redirects]]
+     from = "/*"
+     to = "/index.html"
+     status = 200
+   ```
+
+This ensures Netlify picks the right build folder. ([answers.netlify.com][1], [docs.netlify.com][2], [netlify.com][3], [github.com][4])
+
+---
+
+### 3. 📄 Review your build command structure
+
+Based on your logs, your script:
+
+```bash
+vite build && esbuild server/index.ts … && mkdir -p dist/functions && npx esbuild …
+```
+
+Ensure both `vite build` and your `esbuild server/index.ts` commands complete successfully **locally**:
+
+```bash
+npm run build
+```
+
+* Check if `dist/` is created.
+* Validate `dist/functions/` content after functions build.
+* If any step fails locally, fix before redeploy.
+
+---
+
+### 4. 🔄 Redeploy steps
+
+Once your above fixes are committed:
+
+1. Push to GitHub.
+2. In Netlify dashboard, redeploy the production branch.
+3. Carefully monitor logs to confirm:
+
+   * `vite` is detected
+   * Build completes generating `dist/`
+   * Netlify publishes `dist/` as the site root.
+
+---
+
+### 5. 🧩 Optional: Use Netlify CLI for local test
+
+Simulate exactly what Netlify runs:
+
+```bash
+npm install -g netlify-cli
+netlify login
+netlify init     # sets up build/publish settings
+netlify build   # simulates deploy
+netlify deploy --prod  # test live
+```
+
+This helps catch misconfigurations before pushing. ([github.com][4], [github.com][5])
+
+---
+
+### ✍️ Quick Summary
+
+| Step | Action                                                               |
+| ---- | -------------------------------------------------------------------- |
+| 1    | Install `"vite"` as a dev dependency and commit files                |
+| 2    | Ensure build script includes `vite build`                            |
+| 3    | Set Netlify’s **Publish directory** to `dist` (UI or `netlify.toml`) |
+| 4    | Add SPA redirect rule if using client-side routing                   |
+| 5    | Rebuild locally; then redeploy                                       |
+| 6    | (Optional) Use `netlify build` to test pre-push                      |
+
+---
+
+### ✅ TL;DR
+
+Your deploy fails because `vite` isn't installed, and Netlify is looking for the wrong publish directory. Fix:
+
+* Install and commit Vite.
+* Set publish folder to `dist`.
+* Add redirect for SPAs.
+* Redeploy and verify success.
+
+Let me know if you want me to dig into your config or logs further!
+
+[1]: https://answers.netlify.com/t/build-failed-using-vite-react/52550?utm_source=chatgpt.com "Build failed using vite+react - Netlify Support Forums"
+[2]: https://docs.netlify.com/configure-builds/overview/?utm_source=chatgpt.com "Build configuration overview | Netlify Docs"
+[3]: https://www.netlify.com/blog/how-to-deploy-vue-3-and-vite-app-in-5-minutes/?utm_source=chatgpt.com "Netlify | Deploy a Vue 3 & Vite on Netlify in 5 Minutes"
+[4]: https://github.com/AaronBeaudoin/vite-plugin-ssr-example-netlify?utm_source=chatgpt.com "GitHub - AaronBeaudoin/vite-plugin-ssr-example-netlify: An example vite ..."
+[5]: https://github.com/orgs/netlify/repositories?utm_source=chatgpt.com "netlify repositories · GitHub"
