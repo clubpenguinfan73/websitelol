@@ -125,45 +125,40 @@ export const getBadgesFromFlags = (publicFlags: number): string[] => {
     .map(([name]) => name);
 };
 
-// Discord Badge Icons - Using SVG data URLs for reliable display
+// Discord Badge Icons - Using direct SVG rendering for reliable display
 export const getBadgeIcon = (badgeName: string): string => {
-  // Convert SVG to data URL for reliable display
-  const svgToDataUrl = (svg: string): string => {
-    return `data:image/svg+xml;base64,${btoa(svg)}`;
-  };
-  
   // Official Discord badge SVG content mapped to both full names and snake_case
   const badgeIconURLs: { [key: string]: string } = {
     // Full names (from frontend)
-    "Discord Staff": svgToDataUrl(discordBadges.staff),
-    "Discord Partner": svgToDataUrl(discordBadges.partner), 
-    "HypeSquad Events": svgToDataUrl(discordBadges.hypesquad_events),
-    "HypeSquad Bravery": svgToDataUrl(discordBadges.hypesquad_bravery),
-    "HypeSquad Brilliance": svgToDataUrl(discordBadges.hypesquad_brilliance), 
-    "HypeSquad Balance": svgToDataUrl(discordBadges.hypesquad_balance),
-    "Bug Hunter Level 1": svgToDataUrl(discordBadges.bug_hunter_level_1),
-    "Bug Hunter Level 2": svgToDataUrl(discordBadges.bug_hunter_level_2),
-    "Early Supporter": svgToDataUrl(discordBadges.early_supporter),
-    "Active Developer": svgToDataUrl(discordBadges.active_developer),
-    "Verified Bot Developer": svgToDataUrl(discordBadges.early_verified_bot_developer),
-    "Certified Moderator": svgToDataUrl(discordBadges.discord_certified_moderator),
-    "Bot HTTP Interactions": svgToDataUrl(discordBadges.bot_http_interactions),
+    "Discord Staff": discordBadges.staff,
+    "Discord Partner": discordBadges.partner, 
+    "HypeSquad Events": discordBadges.hypesquad_events,
+    "HypeSquad Bravery": discordBadges.hypesquad_bravery,
+    "HypeSquad Brilliance": discordBadges.hypesquad_brilliance, 
+    "HypeSquad Balance": discordBadges.hypesquad_balance,
+    "Bug Hunter Level 1": discordBadges.bug_hunter_level_1,
+    "Bug Hunter Level 2": discordBadges.bug_hunter_level_2,
+    "Early Supporter": discordBadges.early_supporter,
+    "Active Developer": discordBadges.active_developer,
+    "Verified Bot Developer": discordBadges.early_verified_bot_developer,
+    "Certified Moderator": discordBadges.discord_certified_moderator,
+    "Bot HTTP Interactions": discordBadges.bot_http_interactions,
     
     // Backend snake_case names (from API)
-    "discord_staff": svgToDataUrl(discordBadges.staff),
-    "discord_partner": svgToDataUrl(discordBadges.partner), 
-    "hypesquad_events": svgToDataUrl(discordBadges.hypesquad_events),
-    "hypesquad_bravery": svgToDataUrl(discordBadges.hypesquad_bravery),
-    "hypesquad_brilliance": svgToDataUrl(discordBadges.hypesquad_brilliance), 
-    "hypesquad_balance": svgToDataUrl(discordBadges.hypesquad_balance),
-    "bug_hunter_level_1": svgToDataUrl(discordBadges.bug_hunter_level_1),
-    "bug_hunter_level_2": svgToDataUrl(discordBadges.bug_hunter_level_2),
-    "early_supporter": svgToDataUrl(discordBadges.early_supporter),
-    "active_developer": svgToDataUrl(discordBadges.active_developer),
-    "verified_developer": svgToDataUrl(discordBadges.early_verified_bot_developer),
-    "moderator_alumni": svgToDataUrl(discordBadges.discord_certified_moderator),
-    "bot_http_interactions": svgToDataUrl(discordBadges.bot_http_interactions)
+    "discord_staff": discordBadges.staff,
+    "discord_partner": discordBadges.partner, 
+    "hypesquad_events": discordBadges.hypesquad_events,
+    "hypesquad_bravery": discordBadges.hypesquad_bravery,
+    "hypesquad_brilliance": discordBadges.hypesquad_brilliance, 
+    "hypesquad_balance": discordBadges.hypesquad_balance,
+    "bug_hunter_level_1": discordBadges.bug_hunter_level_1,
+    "bug_hunter_level_2": discordBadges.bug_hunter_level_2,
+    "early_supporter": discordBadges.early_supporter,
+    "active_developer": discordBadges.active_developer,
+    "verified_developer": discordBadges.early_verified_bot_developer,
+    "moderator_alumni": discordBadges.discord_certified_moderator,
+    "bot_http_interactions": discordBadges.bot_http_interactions
   };
   
-  return badgeIconURLs[badgeName] || svgToDataUrl(discordBadges.early_supporter);
+  return badgeIconURLs[badgeName] || discordBadges.early_supporter;
 };
