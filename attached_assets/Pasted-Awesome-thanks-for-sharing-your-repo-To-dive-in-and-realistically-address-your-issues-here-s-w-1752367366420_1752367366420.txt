@@ -1,0 +1,63 @@
+Awesome, thanks for sharing your repo 📦! To dive in and realistically address your issues, here's what I'd focus on:
+
+---
+
+### ✅ 1. **Badges not displaying**
+
+Check if you're using the `public_flags` from the Discord user JSON. If that's missing, your badge logic won't run. If it *is* there, verify your UI code uses a mapping like:
+
+```js
+const FLAGS = {
+  DISCORD_EMPLOYEE: 1,
+  PARTNERED_SERVER_OWNER: 2,
+  // etc...
+};
+
+function getBadges(publicFlags) {
+  return Object.entries(FLAGS)
+    .filter(([,flag]) => (publicFlags & flag) === flag)
+    .map(([name]) => name);
+}
+```
+
+Then render icons for those badges.
+
+---
+
+### 🎧 2. **Spotify status not showing**
+
+If you're fetching the profile via OAuth2 or REST API, Spotify info won't show here. That's only available via the **gateway presence event** — meaning:
+
+* You need a Discord **bot with Presence Intent enabled**
+* The bot must be in the **same server** as your user
+* You must use Discord.js or a WebSocket gateway to listen for `presenceUpdate` events and extract Spotify details
+* The Spotify info will appear inside the `activities` list (look for `type: "LISTENING"` and `name: "Spotify"`)
+
+If you're not running a bot and gateway connection, that explains why you see "Playing Discord" instead of "Playing \[song] on Spotify."
+
+---
+
+### 🎨 3. **GIFs not working as PFP/background**
+
+Look at how you handle image uploads and previews. You need to:
+
+* Ensure your file input accepts `.gif` (e.g., `accept="image/*,image/gif"`)
+* Preview using `<img src="...gif">` or `background-image: url(...)`
+* Double-check that your CSS doesn’t inadvertently treat GIFs like static images (e.g., converting them to PNG)
+* Log the MIME type and check console to see if `.gif` is filtered out
+
+---
+
+### ✅ Recommended next steps:
+
+1. Could you locate:
+
+   * The code handling Twitter or Discord badge rendering?
+   * The part where you fetch or listen for user presence?
+   * The portion handling file uploads (PFP/background)?
+
+   I can help correct those directly.
+
+2. If you want me to submit a quick PR for badges, GIF support, and Spotify presence logic, I can do that too.
+
+Let me know which file(s) to focus on or if you want a full PR—happy to help!

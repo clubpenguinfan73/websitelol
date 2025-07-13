@@ -246,21 +246,51 @@ class DiscordAPI {
   getBadges(publicFlags: number): string[] {
     const badges: string[] = [];
     
-    // Discord public flags
-    if (publicFlags & (1 << 0)) badges.push('discord_employee');
-    if (publicFlags & (1 << 1)) badges.push('partnered_server_owner');
-    if (publicFlags & (1 << 2)) badges.push('hypesquad_events');
-    if (publicFlags & (1 << 3)) badges.push('bug_hunter_level_1');
-    if (publicFlags & (1 << 6)) badges.push('hypesquad_bravery');
-    if (publicFlags & (1 << 7)) badges.push('hypesquad_brilliance');
-    if (publicFlags & (1 << 8)) badges.push('hypesquad_balance');
-    if (publicFlags & (1 << 9)) badges.push('early_supporter');
-    if (publicFlags & (1 << 10)) badges.push('team_user');
-    if (publicFlags & (1 << 14)) badges.push('bug_hunter_level_2');
-    if (publicFlags & (1 << 16)) badges.push('verified_bot');
-    if (publicFlags & (1 << 17)) badges.push('early_verified_bot_developer');
-    if (publicFlags & (1 << 18)) badges.push('discord_certified_moderator');
-    if (publicFlags & (1 << 22)) badges.push('active_developer');
+    // Discord Public Flags with complete mappings
+    const FLAGS = {
+      DISCORD_EMPLOYEE: 1 << 0,
+      PARTNERED_SERVER_OWNER: 1 << 1,
+      HYPESQUAD_EVENTS: 1 << 2,
+      BUG_HUNTER_LEVEL_1: 1 << 3,
+      HOUSE_BRAVERY: 1 << 6,
+      HOUSE_BRILLIANCE: 1 << 7,
+      HOUSE_BALANCE: 1 << 8,
+      EARLY_SUPPORTER: 1 << 9,
+      TEAM_USER: 1 << 10,
+      BUG_HUNTER_LEVEL_2: 1 << 14,
+      VERIFIED_BOT: 1 << 16,
+      VERIFIED_DEVELOPER: 1 << 17,
+      CERTIFIED_MODERATOR: 1 << 18,
+      BOT_HTTP_INTERACTIONS: 1 << 19,
+      ACTIVE_DEVELOPER: 1 << 22,
+    };
+
+    // Badge name mapping for user-friendly display
+    const badgeNameMap: { [key: string]: string } = {
+      'DISCORD_EMPLOYEE': 'Discord Staff',
+      'PARTNERED_SERVER_OWNER': 'Partnered Server Owner',
+      'HYPESQUAD_EVENTS': 'HypeSquad Events',
+      'BUG_HUNTER_LEVEL_1': 'Bug Hunter Level 1',
+      'HOUSE_BRAVERY': 'HypeSquad Bravery',
+      'HOUSE_BRILLIANCE': 'HypeSquad Brilliance',
+      'HOUSE_BALANCE': 'HypeSquad Balance',
+      'EARLY_SUPPORTER': 'Early Supporter',
+      'TEAM_USER': 'Team User',
+      'BUG_HUNTER_LEVEL_2': 'Bug Hunter Level 2',
+      'VERIFIED_BOT': 'Verified Bot',
+      'VERIFIED_DEVELOPER': 'Verified Bot Developer',
+      'CERTIFIED_MODERATOR': 'Certified Moderator',
+      'BOT_HTTP_INTERACTIONS': 'Bot HTTP Interactions',
+      'ACTIVE_DEVELOPER': 'Active Developer',
+    };
+
+    // Check each flag and add corresponding badge
+    Object.entries(FLAGS).forEach(([flagName, flagValue]) => {
+      if ((publicFlags & flagValue) === flagValue) {
+        const displayName = badgeNameMap[flagName] || flagName.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase());
+        badges.push(displayName);
+      }
+    });
     
     return badges;
   }

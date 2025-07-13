@@ -90,9 +90,46 @@ export default function AdminPanel({
   });
 
   const handleFileUpload = (file: File, type: 'background' | 'profile') => {
+    // Enhanced file type validation for GIF support
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    const maxSize = 10 * 1024 * 1024; // 10MB limit
+    
+    // Check file type
+    if (!allowedTypes.includes(file.type) && !file.name.toLowerCase().endsWith('.gif')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a valid image file (JPG, PNG, GIF, WEBP).",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Check file size
+    if (file.size > maxSize) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    console.log(`${type} file upload:`, file.name, file.type, `${(file.size / 1024 / 1024).toFixed(2)}MB`);
+    
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
+      
+      // Validate the result
+      if (!result || !result.startsWith('data:')) {
+        toast({
+          title: "Upload failed",
+          description: "Failed to process the image file. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       updateProfileMutation.mutate({
         username: profile?.username || "",
         bio: profile?.bio || "",
@@ -110,6 +147,15 @@ export default function AdminPanel({
         spotifyTrackUrl: profile?.spotifyTrackUrl,
       });
     };
+    
+    reader.onerror = () => {
+      toast({
+        title: "Upload failed",
+        description: "Failed to read the image file. Please try again.",
+        variant: "destructive",
+      });
+    };
+    
     reader.readAsDataURL(file);
   };
 
@@ -400,7 +446,7 @@ export default function AdminPanel({
                       <input
                         type="file"
                         ref={profileUploadRef}
-                        accept="image/*,image/gif"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,.gif,.jpg,.jpeg,.png,.webp"
                         onChange={handleProfileUpload}
                         className="hidden"
                       />
@@ -433,7 +479,7 @@ export default function AdminPanel({
                       <input
                         type="file"
                         ref={backgroundUploadRef}
-                        accept="image/*,image/gif"
+                        accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,.gif,.jpg,.jpeg,.png,.webp"
                         onChange={handleBackgroundUpload}
                         className="hidden"
                       />

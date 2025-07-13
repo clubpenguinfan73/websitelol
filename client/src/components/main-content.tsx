@@ -325,8 +325,8 @@ export default function MainContent({ profile, links, onToggleAdmin, onEditLink 
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="font-semibold text-white">{discordProfile.username}</h4>
                       <div className="flex items-center gap-1">
-                        {/* Render actual Discord badges */}
-                        {discordProfile.badges.map((badge, index) => (
+                        {/* Render actual Discord badges if available */}
+                        {discordProfile.badges && discordProfile.badges.length > 0 && discordProfile.badges.map((badge, index) => (
                           <div key={index} className="w-4 h-4 flex items-center justify-center" title={badge}>
                             <div dangerouslySetInnerHTML={{ __html: getBadgeIcon(badge) }} />
                           </div>
