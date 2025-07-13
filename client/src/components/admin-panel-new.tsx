@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import type { Profile, Link } from "@shared/schema";
+import { DiscordActivityDisplay } from "./DiscordActivityDisplay";
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -1162,6 +1163,12 @@ export default function AdminPanel({
                         <p className="text-xs text-gray-400">2. Create new application</p>
                         <p className="text-xs text-gray-400">3. Copy Application ID</p>
                         <p className="text-xs text-gray-400">4. Get your User ID from Discord</p>
+                      </div>
+                      
+                      {/* Discord Activity Display */}
+                      <div className="bg-dark-gray/50 p-3 rounded-lg">
+                        <p className="text-xs text-gray-400 font-medium mb-2">Live Discord Activity:</p>
+                        <DiscordActivityDisplay />
                       </div>
                     </CardContent>
                   </Card>

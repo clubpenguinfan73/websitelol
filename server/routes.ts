@@ -5,6 +5,7 @@ import { insertProfileSchema, insertLinkSchema } from "@shared/schema";
 import { z } from "zod";
 import { discordAPI } from "./discord";
 import { spotifyAPI } from "./spotify";
+import { startDiscordGateway } from "./discord-gateway";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Get profile data
@@ -166,29 +167,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Discord activity endpoint - real-time activity tracking
+  // Discord activity endpoint - real-time activity tracking from database
   app.get("/api/discord/activity", async (req, res) => {
     try {
-      const activity = await discordAPI.getCurrentActivity();
+      const profile = await storage.getProfile(1);
       
-      if (activity) {
+      if (profile && profile.discordActivityName) {
         // Format the activity for better display
         const formattedActivity = {
-          name: activity.name,
-          type: activity.type,
-          details: activity.details,
-          state: activity.state,
-          timestamps: activity.timestamps,
-          assets: activity.assets,
+          name: profile.discordActivityName,
+          type: profile.discordActivityType || 0,
+          details: profile.discordActivityDetails,
+          state: profile.discordActivityState,
+          status: profile.discordStatus || 'offline',
+          customStatus: profile.discordCustomStatus,
           // Add human-readable type
-          typeText: activity.type === 0 ? 'Playing' : 
-                   activity.type === 1 ? 'Streaming' : 
-                   activity.type === 2 ? 'Listening to' : 
-                   activity.type === 3 ? 'Watching' : 
-                   activity.type === 5 ? 'Competing in' : 'Activity',
-          // Calculate elapsed time if timestamps exist
-          elapsedTime: activity.timestamps?.start ? 
-            Math.floor((Date.now() - activity.timestamps.start) / 1000) : null
+          typeText: profile.discordActivityType === 0 ? 'Playing' : 
+                   profile.discordActivityType === 1 ? 'Streaming' : 
+                   profile.discordActivityType === 2 ? 'Listening to' : 
+                   profile.discordActivityType === 3 ? 'Watching' : 
+                   profile.discordActivityType === 5 ? 'Competing in' : 'Activity'
         };
         
         res.json(formattedActivity);
@@ -629,5 +627,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Start Discord Gateway bot for real-time activity tracking
+  console.log('Starting Discord Gateway bot...');
+  startDiscordGateway();
+  
   return httpServer;
 }
